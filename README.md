@@ -70,7 +70,8 @@ TabletopConcreteBuilder --> TabletopProduct
 ```
 
 ## Estrutura do padrão (GOF - papeis)
-  
+  ![image](https://github.com/user-attachments/assets/32970d94-00b4-470e-8201-e2aaf3a92a64)
+
 
 ## Padrão aplicado no cenário
 
@@ -265,6 +266,8 @@ TabletopComposite --> "*" TabletopComponent
 
 ## Estrutura do padrão (GOF - papeis)
 
+![image](https://github.com/user-attachments/assets/3ef36492-9f6c-45d8-8108-41ef61d211d1)
+
 
 ## Padrão aplicado no cenário
 
@@ -285,9 +288,6 @@ No nosso cenário, estamos construindo um tabuleiro que pode ser composto por pe
   - Implementa métodos para adicionar, remover e acessar os filhos.
   - Implementa a interface TabletopComponent de maneira a delegar operações para os filhos.
 
-
-
- 
 ## Código 
 
 
@@ -452,6 +452,7 @@ TabletopFlyweightConcreteCreator ..|> TabletopFlyweightCreator
 
 ## Estrutura do padrão (GOF - papeis)
 
+![image](https://github.com/user-attachments/assets/cf013925-de8d-4fd0-9daf-9dae96a4c64b)
 
 
 ## Padrão aplicado no cenário
@@ -615,6 +616,11 @@ No nosso cenário, estamos construindo um tabuleiro que pode ser composto por pe
 
 ## Estrutura do Padrão (GOF - Papéis)
 
+![image](https://github.com/user-attachments/assets/269ee1fc-9666-4cde-826d-66e13563054e)
+
+
+## Participantes:
+
 - **Prototype (TabletopPrototype):**  
   Define a interface para objetos que podem ser clonados, declarando o método `clonePrototype()`. Essa interface é a base para qualquer objeto que deseje suportar clonagem.
 
@@ -736,9 +742,12 @@ TabletopConcreteSubject --> TabletopObserver : "notifica"
 @enduml
 ```
 
-## Estrutura (GOF)
-
 ## Estrutura do Padrão (GOF - Papéis)
+
+![image](https://github.com/user-attachments/assets/32ca70b1-8c08-4f52-90c5-7cf49e6f9f1a)
+
+
+## Participantes
 
 - **Observer (TabletopObserver):**
   - Define a interface para os observadores que desejam receber atualizações.
@@ -917,6 +926,8 @@ TabletopCreator --> TabletopAbstractProduct : "factoryMethod()"
 ```
 
 ## Estrutura do Padrão (GOF - Papéis)
+
+![image](https://github.com/user-attachments/assets/ab5b3e4e-51b1-41c1-a768-3d4332d3d7cf)
 
 
 ## Participantes
