@@ -1,20 +1,23 @@
-// Main.java - Integração de todos os padrões GoF
-import java.util.*;
-
-import builder.TabletopDirector;
-import builder.TabletopProduct;
+import builder.*;
+import command.Command;
+import command.CommandInvoker;
+import command.MoverPecaCommand;
 import composite.TabletopComponent;
-import composite.TabletopComposite;
+import context.Peca;
 import flyweight.TabletopFlyweightConcreteCreator;
 import flyweight.TabletopFlyweightProduct;
 import observer.TabletopConcreteObserver;
 import observer.TabletopConcreteSubject;
 import observer.TabletopObserver;
 import prototype.TabletopConcretePrototype;
+import strategy.LeaoMovimentoStrategy;
+import strategy.TigreMovimentoStrategy;
+import state.BloqueadaState;
 
 public class Main {
     public static void main(String[] args) {
         System.out.println("Iniciando montagem de Tabuleiro...");
+        
         System.out.println("Criando tiles via Factory...");
         TabletopConcreteCreator creator1 = new TabletopConcreteCreator("Grama");
         TabletopConcreteCreator creator2 = new TabletopConcreteCreator("Pedra");
@@ -29,18 +32,10 @@ public class Main {
         System.out.println(flyTile1.operation("x:0,y:0"));
         System.out.println(flyTile2.operation("x:0,y:1"));
 
-        System.out.println("Criando área (Composite)...");
-        TabletopComposite area = new TabletopComposite("Zona Inicial");
-        area.add(flyTile1, 0, 0);
-        area.add(flyTile2, 0, 1);
-        area.add(flyTile1, 0, 2);
-        area.add(flyTile2, 1, 0);
-
         System.out.println("Montando tabuleiro com Builder...");
-        List<TabletopComponent> tiles = new ArrayList<>();
-        tiles.add(area);
-        TabletopDirector director = new TabletopDirector();
-        TabletopProduct product = director.construct(10, 10, tiles);
+        TabletopConcreteBuilder builder = new TabletopConcreteBuilder();
+        TabletopDirector director = new TabletopDirector(builder);
+        TabletopProduct product = director.construct(10, 10, flyweightFactory);
 
         System.out.println("Clonando tabuleiro com Prototype...");
         TabletopConcretePrototype prototype = new TabletopConcretePrototype(product);
@@ -61,9 +56,42 @@ public class Main {
         System.out.println("\n🔸 Produto Clonado:");
         System.out.println("Área: " + cloned.getProduct().getX() + "x" + cloned.getProduct().getY());
 
-        System.out.println("\n Flyweights utilizados:");
+        System.out.println("\nFlyweights utilizados:");
         for (String f : flyweightFactory.listFlyweights()) {
             System.out.println("- " + f);
         }
+
+        // ⬇️ Integração com Command Pattern e persistência (log) ⬇️
+        System.out.println("\nExecutando comando de movimento com Command...");
+
+        // Cria uma peça com a estratégia do Leão
+        Peca leao = new Peca("Leão", new LeaoMovimentoStrategy());
+
+        // Cria o comando para mover a peça (de (0,0) para (1,0))
+        Command moverLeaoCommand = new MoverPecaCommand(leao, product, 0, 0, 1, 0, subject);
+
+        // Instancia o invoker para executar o comando
+        CommandInvoker invoker = new CommandInvoker();
+        boolean sucesso = invoker.executeCommand(moverLeaoCommand);
+
+        if (sucesso) {
+            System.out.println("Movimento realizado com sucesso!");
+        } else {
+            System.out.println("Falha ao mover a peça.");
+        }
+        
+  
+        System.out.println("\n--- Demonstração do padrão State ---");
+        
+        // Cria uma peça "Tigre" com sua estratégia (aqui, utilizando a mesma para exemplificar)
+        Peca tigre = new Peca("Tigre", new TigreMovimentoStrategy());
+        
+        System.out.println("Movendo peça no estado Normal:");
+        tigre.mover(product, 2, 2, 3, 2, subject);
+        
+        // Altera o estado da peça para Bloqueada
+        tigre.setState(new BloqueadaState());
+        System.out.println("Tentando mover a peça com estado Bloqueada:");
+        tigre.mover(product, 3, 2, 4, 2, subject);
     }
 }

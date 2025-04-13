@@ -1,8 +1,7 @@
 package builder;
-// Builder Pattern - GOF
-// Produto complexo a ser construído
-import java.util.List; 
-import composite.TabletopComponent; 
+
+import java.util.List;
+import composite.TabletopComponent;
 
 public class TabletopProduct {
     private int x, y;
