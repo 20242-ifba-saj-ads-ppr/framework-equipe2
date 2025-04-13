@@ -12,7 +12,7 @@ public class TabletopDirector {
     public TabletopProduct construct(int width, int height, TabletopFlyweightConcreteCreator tileFactory) {
         builder.buildArea(width, height);
         builder.buildTiles(tileFactory);
-        builder.buildExtras();
+        builder.buildExtras(tileFactory);
         return builder.getResult();
     }
 }

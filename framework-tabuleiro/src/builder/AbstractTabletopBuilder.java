@@ -10,6 +10,6 @@ public abstract class AbstractTabletopBuilder {
 
     public abstract void buildArea(int width, int height);
     public abstract void buildTiles(flyweight.TabletopFlyweightConcreteCreator flyFactory);
-    public abstract void buildExtras();
+    public abstract void buildExtras(flyweight.TabletopFlyweightConcreteCreator flyFactory);
     public abstract TabletopProduct getResult();
 }

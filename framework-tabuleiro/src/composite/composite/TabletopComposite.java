@@ -1,9 +1,7 @@
 package composite;
-// Composite Pattern - GOF
-// Objeto composto que pode conter folhas e outros compostos
+
 import java.util.ArrayList;
 import java.util.List;
-
 import flyweight.TabletopFlyweightProduct;
 
 public class TabletopComposite implements TabletopComponent {
@@ -14,9 +12,27 @@ public class TabletopComposite implements TabletopComponent {
         this.name = name;
         this.children = new ArrayList<>();
     }
-
+    
+    @Override
+    public void add(TabletopComponent component) {
+        children.add(component);
+    }
+    
     public void add(TabletopFlyweightProduct flyweight, int x, int y) {
-        this.children.add(new TabletopLeaf(flyweight, x, y));
+        this.add(new TabletopLeaf(flyweight, x, y));
+    }
+    
+    @Override
+    public void remove(TabletopComponent component) {
+        children.remove(component);
+    }
+    
+    @Override
+    public TabletopComponent getChild(int index) {
+        if(index >= 0 && index < children.size()) {
+            return children.get(index);
+        }
+        throw new IndexOutOfBoundsException("Índice inválido: " + index);
     }
 
     @Override
@@ -25,7 +41,9 @@ public class TabletopComposite implements TabletopComponent {
         sb.append("Composite: ").append(name).append(" [");
         for (int i = 0; i < children.size(); i++) {
             sb.append(children.get(i).operation());
-            if (i < children.size() - 1) sb.append(", ");
+            if (i < children.size() - 1) {
+                sb.append(", ");
+            }
         }
         sb.append("]");
         return sb.toString();

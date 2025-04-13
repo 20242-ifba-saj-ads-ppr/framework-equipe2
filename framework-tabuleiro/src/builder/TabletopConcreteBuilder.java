@@ -1,6 +1,7 @@
 package builder;
 
 import composite.TabletopComposite;
+
 import flyweight.TabletopFlyweightConcreteCreator;
 
 public class TabletopConcreteBuilder extends AbstractTabletopBuilder {
@@ -23,14 +24,21 @@ public class TabletopConcreteBuilder extends AbstractTabletopBuilder {
 
     @Override
     public void buildTiles(TabletopFlyweightConcreteCreator flyFactory) {
-        this.tiles.add(montarZonaPadrao(flyFactory));
+        TabletopComposite zonaPadrao = montarZonaPadrao(flyFactory);
+        this.tiles.add(zonaPadrao);
         System.out.println("Tiles padrão adicionados à área.");
     }
 
+   
     @Override
-    public void buildExtras() {
-        // Exemplo: adicionar obstáculos ou itens interativos
-        System.out.println("Sem extras a serem adicionados.");
+    public void buildExtras(TabletopFlyweightConcreteCreator flyFactory) {
+        
+        TabletopComposite zonaExtras = new TabletopComposite("Zona Extra - Obstáculos");
+        zonaExtras.add(flyFactory.getFlyweight("Obstáculo"), 2, 2);
+        zonaExtras.add(flyFactory.getFlyweight("Obstáculo"), 2, 3);
+        
+        this.tiles.add(zonaExtras);
+        System.out.println("Extras adicionados à área.");
     }
 
     @Override
