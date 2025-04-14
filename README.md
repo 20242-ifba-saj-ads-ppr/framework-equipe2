@@ -1031,4 +1031,244 @@ public class TabletopConcreteProduct extends TabletopAbstractProduct {
 
 
 
+# Command Pattern
+
+## Intenção
+
+Encapsular uma solicitação como um objeto, desta forma permitindo parametrizar clientes com diferentes solicitações, enfileirar ou fazer o registro (log) de solicitações e suportar operações que podem ser desfeitas
+
+## Motivação
+
+Em um framework de jogo de tabuleiro, sem o padrão Command o cliente (por exemplo, a interface de usuário) teria que chamar diretamente métodos das peças (ex.: `mover()`). Isso leva a algumas dificuldades:
+
+- **Acoplamento Elevado:** O cliente precisaria conhecer os detalhes da implementação e do receptor, tornando difícil modificar a lógica ou substituir funcionalidades.
+- **Dificuldade para Log e Replay:** Sem o encapsulamento, registrar as jogadas e reproduzi-las (replay) exigiria lógica repetitiva e espalhada.
+- **Complexidade no Suporte a Undo/Redo:** Sem Command, implementar desfazer e refazer operações demandaria que a lógica de reversão estivesse presente em vários pontos da aplicação.
+
+Com o Command, cada ação do jogo (como mover uma peça) é encapsulada em um objeto comando. Isso possibilita registrar, enfileirar, reexecutar e, futuramente, desfazer ações sem que o cliente precise entender os detalhes da implementação.
+
+```plantuml
+@startuml
+' Exemplo sem Command: o cliente chama diretamente o método do receptor.
+class Peca {
+    + mover(board, origemX, origemY, destinoX, destinoY, subject): boolean
+}
+class Client {
+    + main()
+}
+Client --> Peca : "chama mover()"
+@enduml
+```
+
+Com o padrão Command, o processo de execução torna-se independente do receptor. O cliente simplesmente invoca o comando, que registra e executa a ação, possibilitando o registro para replay e suporte a undo/redo (se implementado).
+
+```plantuml
+
+@startuml
+' Exemplo com Command: encapsulando a ação em um objeto comando.
+interface Command {
+    + execute(): boolean
+    + store(): void
+    + serialize(): String
+}
+
+class MoverPecaCommand {
+    - peca: Peca
+    - board: TabletopProduct
+    - origemX, origemY, destinoX, destinoY: int
+    - subject: TabletopSubject
+    + execute(): boolean
+    + store(): void
+    + serialize(): String
+}
+
+class CommandInvoker {
+    - commandHistory: Stack<Command>
+    + executeCommand(cmd: Command): boolean
+    + getLastCommand(): Command
+}
+
+class Client {
+    + main()
+}
+
+Client --> CommandInvoker : "executa comando"
+CommandInvoker --> Command : "chama execute()"
+MoverPecaCommand --> Peca : "invoca mover()"
+@enduml
+
+```
+## Estrutura do Padrão (GOF - Papéis)
+
+### Participantes
+- **Command (Interface Command):**
+  - Declara uma interface para a execução da operação (execute()), armazenamento (store()) e serialização (serialize()).
+
+- **ConcreteCommand (MoverPecaCommand):**
+  - Encapsula a ação de mover uma peça, armazenando o receptor (a peça) e os detalhes da operação (coordenadas de origem e destino, tabuleiro e sujeito para notificação).
+  - Implementa execute(), que chama o método mover() da peça, e armazena o comando em log, possibilitando seu registro.
+
+- **Invoker (CommandInvoker):**
+  - Solicita a execução do comando.
+  - Armazena os comandos executados em um histórico, possibilitando ações futuras como "undo" ou "redo".
+
+- **Client (CommandLogManager / Interface de Usuário):**
+  - Cria instâncias de comandos com os dados necessários.
+  - Pode carregar comandos previamente armazenados para reexecução (replay) através do log.
+
+- **Receiver (Peca):**
+  - Contém o conhecimento para executar a solicitação (por exemplo, mover-se no tabuleiro).
+  - Interage com outros padrões (Strategy, State, Observer) para validar e executar a ação.
+  
+## Exemplo de Código: 
+
+### Command
+```java
+package command;
+
+public interface Command {
+    boolean execute();
+    void store();
+    String serialize();
+}
+```
+### MoverPecaCommand - ConcreteCommand
+
+```java
+package command;
+
+import context.Peca;
+import builder.TabletopProduct;
+import observer.TabletopSubject;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+
+public class MoverPecaCommand implements Command {
+
+    private Peca peca;
+    private TabletopProduct board;
+    private int origemX, origemY, destinoX, destinoY;
+    private TabletopSubject subject;
+    
+    public MoverPecaCommand(Peca peca, TabletopProduct board,
+                            int origemX, int origemY,
+                            int destinoX, int destinoY,
+                            TabletopSubject subject) {
+        this.peca = peca;
+        this.board = board;
+        this.origemX = origemX;
+        this.origemY = origemY;
+        this.destinoX = destinoX;
+        this.destinoY = destinoY;
+        this.subject = subject;
+    }
+    
+    @Override
+    public boolean execute() {
+        System.out.println("Executando comando para mover a peça " + peca.getNome());
+        boolean resultado = peca.mover(board, origemX, origemY, destinoX, destinoY, subject);
+        if(resultado) {
+            store();
+        }
+        return resultado;
+    }
+    
+    @Override
+    public String serialize() {
+        return "MoverPecaCommand;" + peca.getNome() + ";" + origemX + ";" + origemY + ";" + destinoX + ";" + destinoY;
+    }
+    
+    @Override
+    public void store() {
+        try (PrintWriter out = new PrintWriter(new FileWriter("command.log", true))) {
+            out.println(serialize());
+            System.out.println("Comando armazenado: " + serialize());
+        } catch(IOException e) {
+            System.err.println("Erro ao armazenar comando: " + e.getMessage());
+        }
+    }
+}
+```
+###  CommandInvoker - Invoker
+```java
+
+package command;
+
+import java.util.Stack;
+
+public class CommandInvoker {
+    private Stack<Command> commandHistory = new Stack<>();
+    
+    public boolean executeCommand(Command command) {
+        boolean result = command.execute();
+        if(result) {
+            commandHistory.push(command);
+        }
+        return result;
+    }
+    
+    public Command getLastCommand() {
+        if (!commandHistory.isEmpty()) {
+            return commandHistory.peek();
+        }
+        return null;
+    }
+}
+
+```
+
+### CommandLogManager - Client Help
+```java
+package command;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import builder.TabletopProduct;
+import context.Peca;
+import observer.TabletopSubject;
+import strategy.LeaoMovimentoStrategy;
+
+public class CommandLogManager {
+
+   
+    public static ArrayList<Command> loadCommands(TabletopProduct board, TabletopSubject subject) {
+        ArrayList<Command> comandos = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader("command.log"))) {
+            String linha;
+            while ((linha = reader.readLine()) != null) {
+             
+                String[] parts = linha.split(";");
+                if (parts.length == 6 && parts[0].equals("MoverPecaCommand")) {
+                    String nomePeca = parts[1];
+                    int ox = Integer.parseInt(parts[2]);
+                    int oy = Integer.parseInt(parts[3]);
+                    int dx = Integer.parseInt(parts[4]);
+                    int dy = Integer.parseInt(parts[5]);
+                    
+                    
+                    Peca peca = new Peca(nomePeca, new LeaoMovimentoStrategy());
+                    Command cmd = new MoverPecaCommand(peca, board, ox, oy, dx, dy, subject);
+                    comandos.add(cmd);
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Erro ao carregar comandos do log: " + e.getMessage());
+        }
+        return comandos;
+    }
+}
+```
+## Considerações Finais
+- Aplicar o padrão Command ao framework do jogo de tabuleiro oferece os seguintes benefícios:
+
+- Desacoplamento: O cliente (interface ou lógica de controle) invoca comandos sem conhecer os detalhes da execução.
+
+- Histórico de Ações: Cada comando é registrado, permitindo a implementação de replays ou de sistemas de undo/redo.
+
+- Flexibilidade: É simples adicionar novos comandos ou combinar comandos existentes (através de um MacroCommand), facilitando a evolução do sistema.
+
+- Registro e Persistência: Com a serialização e armazenamento no log, o sistema pode restaurar jogadas, facilitando a análise e correção de erros após uma queda de sistema.
 
