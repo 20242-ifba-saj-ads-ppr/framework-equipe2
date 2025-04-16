@@ -1272,3 +1272,216 @@ public class CommandLogManager {
 
 - Registro e Persistência: Com a serialização e armazenamento no log, o sistema pode restaurar jogadas, facilitando a análise e correção de erros após uma queda de sistema.
 
+# Strategy Pattern
+
+## Intenção
+Definir uma família de algoritmos, encapsular cada uma delas e torná-las intercambiáveis. Strategy permite que o algoritmo varie independentemente dos clientes que o utilizam.
+
+## Motivação
+Em um framework de jogo de tabuleiro, diferentes peças podem ter regras de movimentação distintas. Sem o padrão Strategy, teríamos que ter uma lógica condicional pesada dentro de cada peça para tratar variações no movimento (como movimentos básicos, saltos, ou movimentos especiais). Isso acarreta:
+
+- Complexidade e Acoplamento: Toda a lógica de movimentação ficaria acoplada à classe da peça, dificultando a manutenção e a extensão.
+
+- Dificuldade para Modificar Algoritmos: Alterar uma regra de movimentação implicaria alterar a classe da peça diretamente, afetando possivelmente várias áreas do sistema.
+
+- Reutilização de Algoritmos: Permite utilizar o mesmo algoritmo de movimentação para diferentes tipos de peças, promovendo a reutilização e a consistência.
+
+```plantuml 
+
+@startuml
+class Peca {
+    + mover(board, origemX, origemY, destinoX, destinoY, subject): boolean
+    - lógica de movimento condicional interna
+}
+Client --> Peca : "chama mover()"
+@enduml
+
+```
+
+Com o Strategy, encapsulamos as diferentes regras de movimentação em classes separadas. Assim, a peça se torna um contexto que delega a sua operação de movimento à estratégia vigente, permitindo a mudança dinâmica do comportamento sem alterar o código da peça.
+
+```plantuml 
+@startuml
+interface MovimentoStrategy {
+    + mover(peca, board, origemX, origemY, destinoX, destinoY, subject): boolean
+}
+
+class LeaoMovimentoStrategy {
+    + mover(...)
+}
+
+class TigreMovimentoStrategy {
+    + mover(...)
+}
+
+class Peca {
+    - movimentoStrategy: MovimentoStrategy
+    + mover(...): boolean
+    + setMovimentoStrategy(strategy: MovimentoStrategy)
+}
+
+Client --> Peca : "chama mover()"
+Peca --> MovimentoStrategy : "delegar mover()"
+LeaoMovimentoStrategy ..> MovimentoStrategy
+TigreMovimentoStrategy ..> MovimentoStrategy
+@enduml
+```
+
+## Estrutura do Padrão (GOF - Papéis)
+### Participantes
+
+- **Strategy (Interface MovimentoStrategy):**
+  - Declara uma interface para o algoritmo de movimentação, possibilitando que diferentes implementações sejam utilizadas de forma intercambiável.
+
+- **ConcreteStrategy (LeaoMovimentoStrategy, TigreMovimentoStrategy):**
+  - Implementa a interface MovementStrategy com comportamentos específicos. Por exemplo, LeaoMovimentoStrategy define as regras de movimento para o Leão (movimento básico e salto sobre água).
+
+- **Context (Peca):**
+  - Possui uma referência a um objeto do tipo MovimentoStrategy e delega a operação de movimento a essa estratégia. O contexto pode alterar a estratégia em tempo de execução para mudar seu comportamento.
+
+- **Client:**
+  - Configura o contexto com uma estratégia concreta e invoca a operação de movimento, sem se preocupar com os detalhes de implementação do algoritmo.
+
+## Exemplo de Código
+
+#### Interface MovimentoStrategy
+
+```java
+package strategy;
+
+import builder.TabletopProduct;
+import observer.TabletopSubject;
+
+public interface MovimentoStrategy {
+    
+    boolean mover(Object peca, TabletopProduct board,
+                  int origemX, int origemY, 
+                  int destinoX, int destinoY,
+                  TabletopSubject subject);
+}
+```
+
+#### LeaoMovimentoStrategy - ConcreteStrategy
+
+```java
+package strategy;
+
+import builder.TabletopProduct;
+import observer.TabletopSubject;
+
+public class LeaoMovimentoStrategy implements MovimentoStrategy {
+
+    @Override
+    public boolean mover(Object peca, TabletopProduct board,
+                         int origemX, int origemY, 
+                         int destinoX, int destinoY,
+                         TabletopSubject subject) {
+        
+      
+        boolean movimentoValido = verificaMovimentoBasico(origemX, origemY, destinoX, destinoY);
+        
+ 
+        if (estaSaltandoSobreAgua(origemX, origemY, destinoX, destinoY)) {
+            
+            movimentoValido = true; 
+        }
+        
+        if (movimentoValido) {
+            atualizarTabuleiro(board, origemX, origemY, destinoX, destinoY, peca);
+            
+            
+            subject.notifyObservers("Leão moveu-se de (" + origemX + "," + origemY + 
+                                    ") para (" + destinoX + "," + destinoY + ")");
+        }
+        
+        return movimentoValido;
+    }
+    
+  
+    private boolean verificaMovimentoBasico(int ox, int oy, int dx, int dy) {
+        int difX = Math.abs(dx - ox);
+        int difY = Math.abs(dy - oy);
+        return ((difX == 1 && difY == 0) || (difX == 0 && difY == 1));
+    }
+
+    private boolean estaSaltandoSobreAgua(int ox, int oy, int dx, int dy) {
+        int distancia = Math.abs(dx - ox) + Math.abs(dy - oy);
+        return (distancia > 1);
+    }
+    
+  
+    private void atualizarTabuleiro(TabletopProduct board,
+                                    int origemX, int origemY,
+                                    int destinoX, int destinoY, Object peca) {
+   
+        System.out.println("Atualizando tabuleiro: movendo peça de (" 
+                            + origemX + "," + origemY + ") para (" 
+                            + destinoX + "," + destinoY + ").");
+    }
+}
+
+```
+
+#### Context (Peca)
+
+```java
+package context; 
+
+import builder.TabletopProduct;
+import observer.TabletopSubject;
+import strategy.MovimentoStrategy;
+import state.PecaState;
+import state.NormalState;
+
+public class Peca {
+    
+    private String nome;
+    private MovimentoStrategy movimentoStrategy;
+    
+    private PecaState state;
+    
+    public Peca(String nome, MovimentoStrategy movimentoStrategy) {
+        this.nome = nome;
+        this.movimentoStrategy = movimentoStrategy;
+        this.state = new NormalState();
+    }
+    
+    public void setMovimentoStrategy(MovimentoStrategy movimentoStrategy) {
+        this.movimentoStrategy = movimentoStrategy;
+    }
+    
+    public MovimentoStrategy getMovimentoStrategy() {
+        return movimentoStrategy;
+    }
+    
+    public void setState(PecaState state) {
+        this.state = state;
+    }
+    
+    public PecaState getState() {
+        return state;
+    }
+    
+    public boolean mover(TabletopProduct board,
+                         int origemX, int origemY,
+                         int destinoX, int destinoY,
+                         TabletopSubject subject) {
+        return state.mover(this, board, origemX, origemY, destinoX, destinoY, subject);
+    }
+    
+    public String getNome() {
+        return nome;
+    }
+}
+
+```
+
+## Considerações Finais
+- **Desacoplamento do Algoritmo:**
+  - A lógica de movimentação é separada da classe Peca, permitindo que estratégias diferentes sejam aplicadas sem modificar o contexto.
+
+- **Flexibilidade e Extensibilidade:**
+  - Novos comportamentos de movimento podem ser adicionados como novas implementações de MovimentoStrategy sem a necessidade de alterar a classe Peca ou outras partes do sistema.
+
+- **Reutilização:**
+O mesmo algoritmo de movimentação pode ser utilizado por diversas peças, promovendo a reutilização e facilitando a manutenção.
