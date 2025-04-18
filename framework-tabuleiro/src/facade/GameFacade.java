@@ -7,6 +7,7 @@ import command.Command;
 import command.CommandInvoker;
 import command.MoverPecaCommand;
 import context.Peca;
+import context.PlayerSide;
 import flyweight.TabletopFlyweightConcreteCreator;
 import observer.TabletopConcreteObserver;
 import observer.TabletopConcreteSubject;
@@ -39,11 +40,15 @@ public class GameFacade {
         subject.setState("Tabuleiro configurado.");
     }
     
-    public void executeMove(String pieceName, int ox, int oy, int dx, int dy) {
-        Peca piece = new Peca(pieceName, new LeaoMovimentoStrategy());
+    public void executeMove(String pieceName,
+                        PlayerSide side,
+                        int ox, int oy,
+                        int dx, int dy) {
+        Peca piece = new Peca(pieceName, side, new LeaoMovimentoStrategy());
         Command moveCommand = new MoverPecaCommand(piece, board, ox, oy, dx, dy, subject);
         commandInvoker.executeCommand(moveCommand);
     }
+
     
     /**
      * Método-fachada para dividir o tabuleiro em lado branco e preto.

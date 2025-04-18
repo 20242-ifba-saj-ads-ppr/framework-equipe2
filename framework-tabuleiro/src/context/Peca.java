@@ -1,4 +1,4 @@
-package context; 
+package context;
 
 import builder.TabletopProduct;
 import observer.TabletopSubject;
@@ -6,50 +6,53 @@ import strategy.MovimentoStrategy;
 import state.PecaState;
 import state.NormalState;
 
+/**
+ * Representa uma peça do jogo, agora associada a um lado (WHITE ou BLACK).
+ */
 public class Peca {
-    
     private String nome;
+    private PlayerSide side;                  // novo campo
     private MovimentoStrategy movimentoStrategy;
-    
-    // Novo atributo representando o estado atual da peça
     private PecaState state;
-    
-    public Peca(String nome, MovimentoStrategy movimentoStrategy) {
+
+    /**
+     * Construtor atualizado: nome, lado e estratégia de movimento.
+     */
+    public Peca(String nome, PlayerSide side, MovimentoStrategy movimentoStrategy) {
         this.nome = nome;
+        this.side = side;
         this.movimentoStrategy = movimentoStrategy;
-        // Estado inicial: Normal
         this.state = new NormalState();
     }
-    
+
+    public String getNome() {
+        return nome;
+    }
+
+    public PlayerSide getSide() {
+        return side;
+    }
+
     public void setMovimentoStrategy(MovimentoStrategy movimentoStrategy) {
         this.movimentoStrategy = movimentoStrategy;
     }
-    
-    // Getter para a estratégia de movimento (usado pelo estado Normal)
+
     public MovimentoStrategy getMovimentoStrategy() {
         return movimentoStrategy;
     }
-    
-    // Método para alterar o estado da peça
+
     public void setState(PecaState state) {
         this.state = state;
     }
-    
+
     public PecaState getState() {
         return state;
     }
-    
-    // Método mover agora delega para o estado atual
+
     public boolean mover(TabletopProduct board,
                          int origemX, int origemY,
                          int destinoX, int destinoY,
                          TabletopSubject subject) {
         return state.mover(this, board, origemX, origemY, destinoX, destinoY, subject);
     }
-    
-    public String getNome() {
-        return nome;
-    }
 }
-
-
