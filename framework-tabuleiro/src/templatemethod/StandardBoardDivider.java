@@ -1,8 +1,8 @@
 package templatemethod;
 
+import TabletopComposite;
 import builder.TabletopProduct;
 import flyweight.TabletopFlyweightConcreteCreator;
-import composite.TabletopComposite;
 
 public class StandardBoardDivider extends AbstractBoardDivider {
 

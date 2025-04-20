@@ -2,7 +2,8 @@ package builder;
 
 import java.util.ArrayList;
 import java.util.List;
-import composite.TabletopComponent;
+
+import TabletopComponent;
 
 public abstract class AbstractTabletopBuilder {
     protected int x, y;

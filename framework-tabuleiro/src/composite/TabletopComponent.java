@@ -1,4 +1,4 @@
-package composite;
+
 
 public interface TabletopComponent {
     String operation();

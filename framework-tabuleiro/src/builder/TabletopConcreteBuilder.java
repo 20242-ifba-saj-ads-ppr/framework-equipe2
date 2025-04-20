@@ -1,7 +1,6 @@
 package builder;
 
-import composite.TabletopComposite;
-
+import TabletopComposite;
 import flyweight.TabletopFlyweightConcreteCreator;
 
 public class TabletopConcreteBuilder extends AbstractTabletopBuilder {

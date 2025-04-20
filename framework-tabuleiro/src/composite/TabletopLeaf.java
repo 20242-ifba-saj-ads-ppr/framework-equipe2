@@ -1,6 +1,4 @@
-package composite;
-// Composite Pattern - GOF
-// Objeto folha no padrão Composite
+
 
 import flyweight.TabletopFlyweightProduct;
 
