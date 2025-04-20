@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import composite.TabletopComponent;
 
-import TabletopComponent;
 
 public class TabletopProduct {
     private int x, y;
