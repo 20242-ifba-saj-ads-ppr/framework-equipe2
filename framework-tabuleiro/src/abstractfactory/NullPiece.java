@@ -1,26 +1,22 @@
 package abstractfactory;
 
-
 import context.Peca;
 import context.PlayerSide;
-import strategy.MovimentoStrategy;
+import context.Position;
 import builder.TabletopProduct;
 import observer.TabletopSubject;
+import strategy.MovimentoStrategy;
 
-/**
- * NullPiece: não faz nada e evita checagens de null.
- */
 public class NullPiece extends Peca {
-    public NullPiece() {
+    public NullPiece(Position pos) {
         super("Peça Inválida", PlayerSide.WHITE, new MovimentoStrategy() {
             @Override
-            public boolean mover(Object peca, TabletopProduct board,
+            public boolean mover(Peca peca, TabletopProduct board,
                                  int ox, int oy, int dx, int dy,
                                  TabletopSubject subject) {
-                // movimento sempre falha
                 return false;
             }
-        });
+        }, pos);
     }
 
     @Override

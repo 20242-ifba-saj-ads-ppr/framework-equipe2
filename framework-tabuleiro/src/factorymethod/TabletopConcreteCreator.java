@@ -1,5 +1,6 @@
-// Factory Pattern - GOF
-// Criador concreto
+package factorymethod;
+
+
 public class TabletopConcreteCreator extends TabletopCreator {
     private String name;
 

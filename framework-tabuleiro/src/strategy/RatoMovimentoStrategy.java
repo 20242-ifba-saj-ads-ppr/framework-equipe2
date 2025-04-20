@@ -1,41 +1,31 @@
 package strategy;
 
 import builder.TabletopProduct;
+import context.Peca;
+import enums.CellType;
 import observer.TabletopSubject;
 
 public class RatoMovimentoStrategy implements MovimentoStrategy {
-
     @Override
-    public boolean mover(Object peca, TabletopProduct board, int ox, int oy, int dx, int dy, TabletopSubject subject) {
-        if (!movimentoBasico(ox, oy, dx, dy)) return false;
-
-        boolean estaNaAgua = estaNaAgua(ox, oy);
-        boolean destinoElefante = verificaDestinoEhElefante(board, dx, dy);
-
-        if (estaNaAgua && destinoElefante) {
+    public boolean mover(Peca peca,
+                         TabletopProduct board,
+                         int ox, int oy, int dx, int dy,
+                         TabletopSubject subject) {
+        if (!board.isWithinBounds(dx, dy) || Math.abs(ox - dx) + Math.abs(oy - dy) != 1)
             return false;
-        }
 
-        atualizarTabuleiro(board, ox, oy, dx, dy, peca);
-        subject.notifyObservers("Rato moveu-se para (" + dx + "," + dy + ")");
+        CellType origemType = board.getCellType(ox, oy);
+        CellType destinoType = board.getCellType(dx, dy);
+
+        Peca alvo = board.getPieceAt(dx, dy);
+        if (alvo != null && alvo.getSide() == peca.getSide()) return false;
+
+        
+        if (origemType == CellType.WATER && destinoType == CellType.LAND &&
+            alvo != null && alvo.getNome().equals("Elefante")) return false;
+
+        board.movePiece(peca, ox, oy, dx, dy);
+        if (alvo != null) board.removePiece(alvo);
         return true;
-    }
-
-    private boolean movimentoBasico(int ox, int oy, int dx, int dy) {
-        return (Math.abs(dx - ox) + Math.abs(dy - oy)) == 1;
-    }
-
-    private boolean estaNaAgua(int x, int y) {
-        // Verifica se a célula (x,y) é azul (água)
-        return false;
-    }
-
-    private boolean verificaDestinoEhElefante(TabletopProduct board, int dx, int dy) {
-        // Simular: checar se destino contém um elefante inimigo
-        return false;
-    }
-
-    private void atualizarTabuleiro(TabletopProduct board, int ox, int oy, int dx, int dy, Object peca) {
-        System.out.println("Rato moveu.");
     }
 }

@@ -1,30 +1,35 @@
 package abstractfactory;
 
-
-
-
 import context.Peca;
 import context.PlayerSide;
+import context.Position;
+import strategy.MovimentoStrategy;
 
-/**
- * Define a família de criação de peças do JogoSelva.
- */
-public interface SelvaPieceFactory {
-    Peca createLeao(PlayerSide side);
-    Peca createTigre(PlayerSide side);
-    Peca createElefante(PlayerSide side);
-    // opcional: outros createXxx()
-
-    /**
-     * Gatilho genérico: cria pela string do tipo.
-     * Retorna NullPiece se o tipo não existir.
-     */
-    default Peca create(String tipo, PlayerSide side) {
-        switch (tipo.toLowerCase()) {
-            case "leão":     return createLeao(side);
-            case "tigre":    return createTigre(side);
-            case "elefante": return createElefante(side);
-            default:         return new NullPiece();
-        }
+public abstract class SelvaPieceFactory {
+    protected Peca createPiece(String nome, PlayerSide side, MovimentoStrategy strat, Position start) {
+        return new Peca(nome, side, strat, start);
     }
+
+    public Peca create(String nome, PlayerSide side) {
+    return switch (nome.toLowerCase()) {
+        case "elefante" -> createElefante(side);
+        case "leão", "leao" -> createLeao(side);
+        case "tigre" -> createTigre(side);
+        case "leopardo" -> createLeopardo(side);
+        case "cão", "cao" -> createCao(side);
+        case "lobo" -> createLobo(side);
+        case "gato" -> createGato(side);
+        case "rato" -> createRato(side);
+        default -> throw new IllegalArgumentException("Peça desconhecida: " + nome);
+    };
+}
+
+    public abstract Peca createElefante(PlayerSide side);
+    public abstract Peca createLeao(PlayerSide side);
+    public abstract Peca createTigre(PlayerSide side);
+    public abstract Peca createLeopardo(PlayerSide side);
+    public abstract Peca createCao(PlayerSide side);
+    public abstract Peca createLobo(PlayerSide side);
+    public abstract Peca createGato(PlayerSide side);
+    public abstract Peca createRato(PlayerSide side);
 }

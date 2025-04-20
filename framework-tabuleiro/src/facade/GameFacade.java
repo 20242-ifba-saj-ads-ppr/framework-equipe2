@@ -1,6 +1,5 @@
 package facade;
 
-import builder.TabletopConcreteBuilder;
 import builder.TabletopDirector;
 import builder.TabletopProduct;
 import command.Command;

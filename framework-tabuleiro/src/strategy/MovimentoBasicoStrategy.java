@@ -1,20 +1,25 @@
 package strategy;
 
 import builder.TabletopProduct;
+import context.Peca;
+import enums.CellType;
 import observer.TabletopSubject;
 
 public class MovimentoBasicoStrategy implements MovimentoStrategy {
-
     @Override
-    public boolean mover(Object peca, TabletopProduct board, int ox, int oy, int dx, int dy, TabletopSubject subject) {
-        if ((Math.abs(dx - ox) + Math.abs(dy - oy)) != 1) return false;
-
-        atualizarTabuleiro(board, ox, oy, dx, dy, peca);
-        subject.notifyObservers("Peça moveu-se de (" + ox + "," + oy + ") para (" + dx + "," + dy + ")");
+    public boolean mover(Peca peca,
+                         TabletopProduct board,
+                         int ox, int oy, int dx, int dy,
+                         TabletopSubject subject) {
+        if (!board.isWithinBounds(dx, dy) || Math.abs(ox - dx) + Math.abs(oy - dy) != 1)
+            return false;
+        if (board.getCellType(dx, dy) == CellType.WATER) return false;
+        Peca alvo = board.getPieceAt(dx, dy);
+        if (alvo != null) {
+            if (alvo.getSide() == peca.getSide()) return false;
+        }
+        board.movePiece(peca, ox, oy, dx, dy);
+        if (alvo != null) board.removePiece(alvo);
         return true;
-    }
-
-    private void atualizarTabuleiro(TabletopProduct board, int ox, int oy, int dx, int dy, Object peca) {
-        System.out.println("Peça comum movida.");
     }
 }

@@ -7,22 +7,27 @@ import state.PecaState;
 import state.NormalState;
 
 /**
- * Representa uma peça do jogo, agora associada a um lado (WHITE ou BLACK).
+ * Representa uma peça do jogo Selva, com estado e estratégia de movimento.
  */
 public class Peca {
     private String nome;
-    private PlayerSide side;                  // novo campo
+    private PlayerSide side;
     private MovimentoStrategy movimentoStrategy;
     private PecaState state;
+    private Position position;
 
     /**
-     * Construtor atualizado: nome, lado e estratégia de movimento.
+     * Construtor completo: define nome, lado, estratégia e posição inicial.
      */
-    public Peca(String nome, PlayerSide side, MovimentoStrategy movimentoStrategy) {
+    public Peca(String nome,
+                PlayerSide side,
+                MovimentoStrategy movimentoStrategy,
+                Position start) {
         this.nome = nome;
         this.side = side;
         this.movimentoStrategy = movimentoStrategy;
         this.state = new NormalState();
+        this.position = start;
     }
 
     public String getNome() {
@@ -33,22 +38,33 @@ public class Peca {
         return side;
     }
 
-    public void setMovimentoStrategy(MovimentoStrategy movimentoStrategy) {
-        this.movimentoStrategy = movimentoStrategy;
+    public Position getPosition() {
+        return position;
+    }
+
+    public void setPosition(Position newPos) {
+        this.position = newPos;
     }
 
     public MovimentoStrategy getMovimentoStrategy() {
         return movimentoStrategy;
     }
 
-    public void setState(PecaState state) {
-        this.state = state;
+    public void setMovimentoStrategy(MovimentoStrategy movimentoStrategy) {
+        this.movimentoStrategy = movimentoStrategy;
     }
 
     public PecaState getState() {
         return state;
     }
 
+    public void setState(PecaState state) {
+        this.state = state;
+    }
+
+    /**
+     * Executa o movimento conforme o estado atual (NormalState delega à estratégia).
+     */
     public boolean mover(TabletopProduct board,
                          int origemX, int origemY,
                          int destinoX, int destinoY,

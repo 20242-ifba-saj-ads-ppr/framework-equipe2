@@ -1,3 +1,4 @@
+package composite;
 
 
 import flyweight.TabletopFlyweightProduct;

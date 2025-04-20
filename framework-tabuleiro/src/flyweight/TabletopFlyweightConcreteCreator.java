@@ -1,6 +1,5 @@
 package flyweight;
-// Flyweight Pattern - GOF
-// Fábrica concreta que reutiliza instâncias de tiles
+
 import java.util.HashMap;
 
 public class TabletopFlyweightConcreteCreator extends TabletopFlyweightFactory {

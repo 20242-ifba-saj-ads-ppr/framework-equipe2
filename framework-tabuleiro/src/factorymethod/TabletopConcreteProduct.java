@@ -1,5 +1,4 @@
-// Factory Pattern - GOF
-// Produto concreto
+package factorymethod;
 public class TabletopConcreteProduct extends TabletopAbstractProduct {
     private String name;
 

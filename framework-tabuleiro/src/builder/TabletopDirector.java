@@ -1,18 +1,26 @@
 package builder;
 
-import flyweight.TabletopFlyweightConcreteCreator;
+import factorymethod.CellCreator;
+import flyweight.TabletopFlyweightFactory;
+import abstractfactory.SelvaPieceFactory;
 
 public class TabletopDirector {
-    private AbstractTabletopBuilder builder;
+    private final TabletopBuilder builder;
 
-    public TabletopDirector(AbstractTabletopBuilder builder) {
+    public TabletopDirector(TabletopBuilder builder) {
         this.builder = builder;
     }
 
-    public TabletopProduct construct(int width, int height, TabletopFlyweightConcreteCreator tileFactory) {
-        builder.buildArea(width, height);
-        builder.buildTiles(tileFactory);
-        builder.buildExtras(tileFactory);
-        return builder.getResult();
+    public TabletopProduct construct(int width,
+                                     int height,
+                                     CellCreator cellFactory,
+                                     TabletopFlyweightFactory flyFactory,
+                                     SelvaPieceFactory pieceFactory) {
+        return builder
+                .withDimensions(width, height)
+                .buildCells(cellFactory, flyFactory)
+                .buildTiles(flyFactory)
+                .buildPieces(pieceFactory)
+                .getResult();
     }
 }
