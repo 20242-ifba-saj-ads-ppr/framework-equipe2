@@ -9,4 +9,9 @@ public class WaterCell extends CellAbstractProduct {
     public void render(flyweight.TabletopFlyweightFactory fw) {
         System.out.println(fw.getFlyweight("Água").operation("x:"+pos.row+",y:"+pos.col));
     }
+    @Override
+    public WaterCell clone() {
+        return new WaterCell(new Position(pos.row, pos.col));
+
+    }
 }

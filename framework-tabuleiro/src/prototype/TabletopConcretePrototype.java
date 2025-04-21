@@ -1,6 +1,4 @@
 package prototype;
-// Prototype Pattern - GOF
-// Implementação concreta do protótipo
 
 import builder.TabletopProduct;
 
@@ -13,7 +11,9 @@ public class TabletopConcretePrototype implements TabletopPrototype {
 
     @Override
     public TabletopPrototype clonePrototype() {
-        return new TabletopConcretePrototype(product); // shallow copy
+        // usa o deepClone() que acabamos de implementar
+        TabletopProduct cloned = product.deepClone();
+        return new TabletopConcretePrototype(cloned);
     }
 
     public TabletopProduct getProduct() {

@@ -1,5 +1,7 @@
 package facade;
 
+import abstractfactory.SelvaPieceFactory;
+import builder.SelvaTabletopBuilder;
 import builder.TabletopDirector;
 import builder.TabletopProduct;
 import command.Command;
@@ -7,7 +9,10 @@ import command.CommandInvoker;
 import command.MoverPecaCommand;
 import context.Peca;
 import context.PlayerSide;
+import context.Position;
+import factorymethod.CellCreator;
 import flyweight.TabletopFlyweightConcreteCreator;
+import flyweight.TabletopFlyweightFactory;
 import observer.TabletopConcreteObserver;
 import observer.TabletopConcreteSubject;
 import observer.TabletopObserver;
@@ -31,28 +36,34 @@ public class GameFacade {
         subject.attach(observer);
     }
     
-    public void setupGame(int width, int height) {
-        TabletopConcreteBuilder builder = new TabletopConcreteBuilder();
-        TabletopFlyweightConcreteCreator flyFactory = new TabletopFlyweightConcreteCreator();
-        TabletopDirector director = new TabletopDirector(builder);
-        board = director.construct(width, height, flyFactory);
-        subject.setState("Tabuleiro configurado.");
-    }
+   
     
-    public void executeMove(String pieceName,
-                        PlayerSide side,
-                        int ox, int oy,
-                        int dx, int dy) {
-        Peca piece = new Peca(pieceName, side, new LeaoMovimentoStrategy());
+    public boolean executeMove(String pieceName,
+                               PlayerSide side,
+                               int ox, int oy,
+                               int dx, int dy) {
+        Peca piece = new Peca(pieceName, side, new LeaoMovimentoStrategy(), new Position(ox, oy));
         Command moveCommand = new MoverPecaCommand(piece, board, ox, oy, dx, dy, subject);
-        commandInvoker.executeCommand(moveCommand);
+        return commandInvoker.executeCommand(moveCommand);
     }
 
+    public void setupSelva(int width,
+                           int height,
+                           CellCreator cellFactory,
+                           TabletopFlyweightFactory flyFactory,
+                           SelvaPieceFactory pieceFactory) {
+        SelvaTabletopBuilder builder = new SelvaTabletopBuilder();
+        TabletopDirector director = new TabletopDirector(builder);
+
+        board = director.construct(width, height,
+                                   cellFactory,
+                                   flyFactory,
+                                   pieceFactory);
+
+        subject.setState("Jogo Selva configurado");
+    }
     
-    /**
-     * Método-fachada para dividir o tabuleiro em lado branco e preto.
-     * Internamente usa o Template Method.
-     */
+    
     public void divideBoard() {
         TabletopFlyweightConcreteCreator flyFactory = new TabletopFlyweightConcreteCreator();
         AbstractBoardDivider divider = new StandardBoardDivider();
@@ -62,5 +73,18 @@ public class GameFacade {
     
     public TabletopProduct getBoard() {
         return board;
+    }
+
+    public void undo() {
+        commandInvoker.undo();
+    }
+    
+    public void replay() {
+        Command lastCommand = commandInvoker.getLastCommand();
+        if (lastCommand != null) {
+            commandInvoker.executeCommand(lastCommand);
+        } else {
+            System.out.println("Nenhum comando anterior para repetir.");
+        }
     }
 }

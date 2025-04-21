@@ -10,4 +10,10 @@ public class LandCell extends CellAbstractProduct
     public void render(flyweight.TabletopFlyweightFactory fw) {
         System.out.println(fw.getFlyweight("Grama").operation("x:"+pos.row+",y:"+pos.col));
     }
+
+    @Override
+    public LandCell clone() {
+        return new LandCell(new Position(pos.row, pos.col));
+    }
+
 }

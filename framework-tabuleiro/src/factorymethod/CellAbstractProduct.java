@@ -17,4 +17,6 @@ public abstract class CellAbstractProduct {
 
     /** Exibe a célula usando Flyweight para renderização */
     public abstract void render(flyweight.TabletopFlyweightFactory flyFactory);
+    public abstract CellAbstractProduct clone();
+
 }

@@ -1,11 +1,19 @@
-# Builder
+# Instituto Federal de Ciência, Educação e Tecnologia da Bahia
 
-## Intenção
+## Contexto do Projeto: 
+
+Elaborar um framework, com no mínimo 12 dos padrões de projetos vistos na disciplina (com no mínimo 3 de cada grupo), para a construção de um jogo de tabuleiro nos moldes de JogoSelva.
+
+## Resumo - Padrões Utilizados no Framework: 
+
+## Builder
+
+### Intenção
 
 Separar a construção de um objeto complexo da sua representação de modo que o mesmo processo de construção possa criar diferentes representações.
 (GOF)
 
-## Motivação
+### Motivação
 Para construir objetos complexos — como peças, células e componentes de um jogo de tabuleiro (TabletopProduct) que possui uma área definida e uma coleção de elementos (como tiles e pieces) — é necessário adotar uma estratégia que permita a configuração gradual e flexível desses objetos, evitando a exposição de um construtor com múltiplos parâmetros.
 
 Sem a utilização de um padrão de projeto, o código cliente teria que instanciar diretamente o tabuleiro utilizando um construtor extenso, como no exemplo abaixo:
@@ -128,87 +136,19 @@ No nosso cenário, estamos desenvolvendo um jogo de tabuleiro inspirado no jogo 
 ### **TabletopBuilder (Builder)**
 
 
-@import "/src/builder/TabletopBuilder.java"
-
+@import "framework-tabuleiro/src/builder/TabletopBuilder.java"
 ### **TabletopConcreteBuilder**
 
-```java
-package builder;
+@import "framework-tabuleiro/src/builder/SelvaTabletopBuilder.java"
 
-import java.util.List;
-
-import composite.TabletopComponent; 
-
-
-
-public class TabletopConcreteBuilder implements TabletopBuilder {
-    private int x, y;
-    private List<TabletopComponent> tiles;
-
-    @Override
-    public TabletopBuilder setArea(int x, int y) {
-        this.x = x;
-        this.y = y;
-        return this;
-    }
-
-    @Override
-    public TabletopBuilder setTiles(List<TabletopComponent> tiles) {
-        this.tiles = tiles;
-        return this;
-    }
-
-    @Override
-    public TabletopProduct getResult() {
-        return new TabletopProduct(x, y, tiles);
-    }
-}
-
-```
 ### **TabletopDirector**
 
-```java
-package builder;
+@import "framework-tabuleiro/src/builder/TabletopDirector.java"
 
-import java.util.List;
-
-import composite.TabletopComponent; 
-
-public class TabletopDirector {
-    public TabletopProduct construct(int x, int y, List<TabletopComponent> tiles) {
-        TabletopBuilder builder = new TabletopConcreteBuilder();
-        return builder.setArea(x, y).setTiles(tiles).getResult();
-    }
-}
-
-
-```
 
 ### **TabletopProduct**
 
-```java
-package builder;
-
-import java.util.List;
-
-import composite.TabletopComponent; 
-
-public class TabletopProduct {
-    private int x, y;
-    private List<TabletopComponent> tiles;
-
-    public TabletopProduct(int x, int y, List<TabletopComponent> tiles) {
-        this.x = x;
-        this.y = y;
-        this.tiles = tiles;
-    }
-
-    public int getX() { return x; }
-    public int getY() { return y; }
-    public List<TabletopComponent> getTiles() { return tiles; }
-}
-
-```
+@import "framework-tabuleiro/src/builder/TabletopDirector.java"
 
 # Composite
 

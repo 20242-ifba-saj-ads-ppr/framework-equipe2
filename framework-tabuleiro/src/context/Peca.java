@@ -71,4 +71,13 @@ public class Peca {
                          TabletopSubject subject) {
         return state.mover(this, board, origemX, origemY, destinoX, destinoY, subject);
     }
+
+    public Peca deepClone() {
+        return new Peca(
+            this.nome,
+            this.side,
+            this.movimentoStrategy,               // compartilha a mesma estratégia
+            new Position(position.row, position.col)
+        );
+    }
 }

@@ -12,4 +12,10 @@ public class TrapCell extends CellAbstractProduct {
         String key = (type == CellType.TRAP_WHITE? "ArmadilhaBranca" : "ArmadilhaPreta");
         System.out.println(fw.getFlyweight(key).operation("x:"+pos.row+",y:"+pos.col));
     }
+
+    @Override
+    public TrapCell clone() {
+        return new TrapCell(new Position(pos.row, pos.col), type == CellType.TRAP_WHITE);
+    }
 }
+

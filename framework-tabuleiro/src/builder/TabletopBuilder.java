@@ -1,7 +1,6 @@
 package builder;
 
 import context.Peca;
-import context.PlayerSide;
 import factorymethod.CellCreator;
 import factorymethod.CellAbstractProduct;
 import flyweight.TabletopFlyweightFactory;

@@ -12,4 +12,11 @@ public class DenCell extends CellAbstractProduct {
         String key = (type == CellType.DEN_WHITE? "TocaBranca" : "TocaPreta");
         System.out.println(fw.getFlyweight(key).operation("x:"+pos.row+",y:"+pos.col));
     }
+
+    @Override
+    public DenCell clone() {
+        return new DenCell(new Position(pos.row, pos.col), type == CellType.DEN_WHITE);
+    }
 }
+
+    

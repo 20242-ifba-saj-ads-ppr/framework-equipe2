@@ -6,6 +6,7 @@ import enums.CellType;
 import factorymethod.CellAbstractProduct;
 import composite.TabletopComponent;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -68,4 +69,68 @@ public class TabletopProduct {
         pieceGrid[pos.row][pos.col] = null;
         return pieces.remove(peca);
     }
+
+    public void restoreState(TabletopProduct state) {
+        // Restaura a grade de peças
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                this.pieceGrid[y][x] = state.getPieceAt(x, y);
+            }
+        }
+    
+        // Restaura as posições das peças
+        this.pieces.clear();
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                Peca p = state.getPieceAt(x, y);
+                if (p != null) {
+                    this.pieces.add(p);
+                }
+            }
+        }
+    
+    }
+
+    // dentro de TabletopProduct
+
+/** Retorna um clone profundo deste objeto */
+public TabletopProduct deepClone() {
+    // 1) Clona as células (supondo que CellAbstractProduct implemente clone())
+    CellAbstractProduct[][] clonedCells = new CellAbstractProduct[height][width];
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            clonedCells[y][x] = cells[y][x].clone();
+        }
+    }
+
+    // 2) Shallow copy dos tiles (eles só referenciam flyweights imutáveis)
+    List<TabletopComponent> clonedTiles = new ArrayList<>(tiles);
+
+    // 3) Clona cada peça usando um método deepClone() em Peca
+    List<Peca> clonedPieces = new ArrayList<>();
+    for (Peca p : pieces) {
+        clonedPieces.add(p.deepClone());
+    }
+
+    // 4) Cria e retorna o novo TabletopProduct
+    return new TabletopProduct(width, height, clonedCells, clonedTiles, clonedPieces);
+    }
+
+    public List<TabletopComponent> getTiles() {
+        return tiles;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public factorymethod.CellAbstractProduct getCellAt(int x, int y) {
+        return cells[y][x];
+    }
+    
+    
 }
