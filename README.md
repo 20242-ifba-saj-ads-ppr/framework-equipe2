@@ -27,7 +27,7 @@ Elaborar um framework, com no mínimo 12 dos padrões de projetos vistos na disc
 
 ## Padrões Utilizados no Framework/Jogo Selva
 
-## 1. Builder
+# 1. Builder
 
 ### Intenção
 
@@ -137,7 +137,7 @@ Com o uso do padrão Builder, essas etapas foram encapsuladas em implementaçõe
 
 @import "framework-tabuleiro/src/builder/TabletopDirector.java"
 
-## 2. Factory Method
+# 2. Factory Method
 
 ##  Intenção
 
@@ -311,7 +311,7 @@ Durante a construção do tabuleiro, diferentes tipos de células precisam ser c
 @import "framework-tabuleiro/src/factorymethod/CellCreator.java"
 
 
-## 3. Abstract Factory
+# 3. Abstract Factory
 
 ## Intenção 
 
@@ -493,7 +493,7 @@ Com Abstract Factory, extraímos a lógica de criação das peças para uma inte
 
 @import "framework-tabuleiro/src/builder/TabletopBuilder.java"
 
-## 4. Strategy Pattern
+# 4. Strategy Pattern
 
 ## Intenção
 Definir uma família de algoritmos, encapsular cada uma delas e torná-las intercambiáveis. Strategy permite que o algoritmo varie independentemente dos clientes que o utilizam.
@@ -549,6 +549,10 @@ TigreMovimentoStrategy ..> MovimentoStrategy
 ```
 
 ## Estrutura do Padrão (GOF - Papéis)
+
+## Padrão aplicado no cénario
+
+Cada tipo de peça no jogo possui regras de movimentação específicas. Sem o uso do padrão Strategy, a lógica de movimento de todas as peças estaria centralizada em uma única classe ou método, cheia de condicionais para verificar o tipo da peça, o que tornaria o código rígido, difícil de manter e não extensível. Com o padrão Strategy, cada peça recebe uma instância de MovimentoStrategy correspondente, como LeaoMovimentoStrategy, TigreMovimentoStrategy, MovimentoBasicoStrategy, etc. A lógica de movimento fica encapsulada em classes especializadas, e o cliente pode trocar ou configurar comportamentos dinamicamente, sem modificar o código das peças.
 
 ### Participantes
 
