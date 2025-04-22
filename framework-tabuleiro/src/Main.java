@@ -23,13 +23,13 @@ public class Main {
         game.divideBoard();
 
         // 4) Exibe os tiles compostos
-        System.out.println("\n🔹 Tiles composições:");
+        System.out.println("\n Tiles composições:");
         for (TabletopComponent c : game.getBoard().getTiles()) {
             System.out.println(c.operation());
         }
 
         // 5) Executa um movimento de exemplo: Leão branco de (0,3) para (1,3)
-        System.out.println("\n🔸 Executando movimento de exemplo:");
+        System.out.println("\n  Executando movimento de exemplo:");
         game.executeMove("Leão", PlayerSide.WHITE, 0, 3, 1, 3);
 
         // 6) Você pode continuar chamando outras operações via facade...

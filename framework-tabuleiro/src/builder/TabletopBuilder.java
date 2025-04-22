@@ -10,10 +10,7 @@ import composite.TabletopComponent;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Builder Pattern (GOF) para montagem de um tabuleiro de Selva.
- * Responsável por definir dimensões, construir células, renderizar tiles e posicionar peças.
- */
+
 public abstract class TabletopBuilder {
     protected int width, height;
     protected CellAbstractProduct[][] cells;
@@ -23,6 +20,7 @@ public abstract class TabletopBuilder {
     /**
      * Define dimensões e inicializa a matriz de células.
      */
+
     public TabletopBuilder withDimensions(int width, int height) {
         this.width = width;
         this.height = height;
@@ -31,6 +29,7 @@ public abstract class TabletopBuilder {
     }
 
     /** Preenche cada célula com fábrica de células. */
+    
     public abstract TabletopBuilder buildCells(CellCreator cellFactory,
                                               TabletopFlyweightFactory flyFactory);
 

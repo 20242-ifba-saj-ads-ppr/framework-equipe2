@@ -10,8 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Produto final do Builder, agora com métodos de acesso e mutação
- * necessários para implementar as estratégias de movimento.
+ * Produto final do Builder. Contém a grade de células, os componentes visuais (tiles) e as peças.
+ * Implementa métodos utilitários para manipulação de peças e células.
  */
 public class TabletopProduct {
     private final int width, height;

@@ -41,7 +41,7 @@ public class SelvaTabletopBuilder extends TabletopBuilder {
 
     @Override
     public TabletopBuilder buildPieces(SelvaPieceFactory pieceFactory) {
-        // Exemplo de posicionamento padrão das peças (WHITE/BLACK)
+   
         pieces.add(pieceFactory.createElefante(PlayerSide.WHITE));
         pieces.add(pieceFactory.createLeao(PlayerSide.BLACK));
         // ... demais peças conforme regras do jogo
