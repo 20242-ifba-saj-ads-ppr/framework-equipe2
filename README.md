@@ -137,71 +137,92 @@ Com o uso do padrão Builder, essas etapas foram encapsuladas em implementaçõe
 
 @import "framework-tabuleiro/src/builder/TabletopDirector.java"
 
-# Composite
+## 2. Composite
 
-## Intenção
+###  Intenção
 
-Compor objetos em estruturas de árvore para representarem hierarquias partes-todo.
-Composite permite aos clientes tratarem de maneira uniforme objetos individuais e
-composições de objetos.
-(GOF)
+Compor objetos em estruturas de árvore para representarem hierarquias partes-todo. Composite permite aos clientes tratarem de maneira uniforme objetos individuais e composições de objetos.
 
 ## Motivação
-Ao desenvolver o jogos de tabuleiro, por exemplo o  jogo Selva, perceberemos que o tabuleiro é composto por diversos componentes que podem ser manipulados de forma hierárquica. Cada peça ou grupo de peças pode ser tratado de maneira uniforme, como um único objeto ou como uma composição de múltiplos objetos. O problema é que o código se torna complexo ao lidar com coleções heterogêneas de objetos, pois o cliente precisa distinguir entre objetos simples e compostos para realizar operações.Fazendo com que o código cliente precise iterar manualmente sobre os tiles do tabuleiro e gerenciar cada um individualmente.
 
+Ao desenvolver jogos de tabuleiro como o Selva, rapidamente percebemos que o tabuleiro é formado por diversos componentes — células, peças isoladas e grupos de células ou peças que devem ser tratados de forma hierárquica. Sem o Composite, o código cliente acaba precisando:
+
+
+
+- Distinguir manualmente entre objetos simples e compostos;
+- Iterar por listas heterogêneas de tiles, chamando métodos diferentes para cada tipo;
+- Gerir detalhes de montagem e atualização de modo espalhado pelo código, aumentando o acoplamento e a duplicação.
+- Isso torna o código verbose e difícil de estender ou manter.
 
 ```plantuml
 @startuml
-class Tabuleiro {
-  - tiles: List<Tile>
-  + adicionarTile(tile: Tile): void
-  + removerTile(tile: Tile): void
-  + obterTiles(): List<Tile>
+title Cenário sem Composite
+
+
+class Casas{
+  +operation(): String
 }
 
-class Tile {
-  + posicaoX: int
-  + posicaoY: int
-  + tipo: String
-  + Tile(posicaoX: int, posicaoY: int, tipo: String)
-  + desenhar(): void
+class ListDeTiles {
+  -tiles: List<Object>
+  +adicionarTile(obj: Object)
+  +imprimirTodos()
 }
 
-class Cliente {
-  + main()
-}
+Cliente --> ListDeTiles : usa
 
-Cliente --> Tabuleiro
-Tabuleiro --> "1..*" Tile
+ListDeTiles --> Casas: contém referência direta
+
+note right of Cliente
+O cliente precisa verificar se o objeto é
+um TabletopLeaf ou uma lista, e tratar
+cada um separadamente.
+Isso aumenta o acoplamento e complexidade.
+end note
 @enduml
 ```
-O padrão Composite permite que o cliente trate objetos individuais e composições de objetos de forma uniforme. Assim, um tabuleiro (composto por várias peças) e uma única peça podem ser manipulados de maneira consistente.
+
+Com o padrão Composite, folhas (tiles individuais) e composições (grupos de tiles) implementam a mesma interface, permitindo que o cliente trate ambos de forma uniforme — basta invocar operation() sem se preocupar com a estrutura interna.
+
+
 
 ```plantuml
 @startuml
+package composite {
 
-interface TabletopComponent {
-  + operation(): String
+  interface TabletopComponent {
+    + operation(): String
+    + add(component: TabletopComponent)
+    + remove(component: TabletopComponent)
+    + getChild(index: int): TabletopComponent
+  }
+
+  class TabletopComposite {
+    - name: String
+    - children: List<TabletopComponent>
+    + TabletopComposite(name: String)
+    + add(component: TabletopComponent)
+    + add(flyweight: TabletopFlyweightProduct, x: int, y: int)
+    + remove(component: TabletopComponent)
+    + getChild(index: int): TabletopComponent
+    + operation(): String
+  }
+
+  class TabletopLeaf {
+    - flyweight: TabletopFlyweightProduct
+    - x: int
+    - y: int
+    + TabletopLeaf(flyweight: TabletopFlyweightProduct, x: int, y: int)
+    + operation(): String
+  }
+
+  TabletopComposite --|> TabletopComponent
+  TabletopLeaf     --|> TabletopComponent
+
+  TabletopComposite *-- TabletopComponent : children
+  TabletopComposite ..> TabletopLeaf          : creates
+  TabletopLeaf      ..> flyweight.TabletopFlyweightProduct : uses
 }
-
-class TabletopLeaf {
-  - flyweight: TabletopFlyweightProduct
-  - x: int
-  - y: int
-  + operation(): String
-}
-
-class TabletopComposite {
-  - name: String
-  - children: List<TabletopComponent>
-  + add(flyweight: TabletopFlyweightProduct, x: int, y: int): void
-  + operation(): String
-}
-
-TabletopLeaf ..|> TabletopComponent
-TabletopComposite ..|> TabletopComponent
-TabletopComposite --> "*" TabletopComponent
-
 @enduml
 ```
 
@@ -212,97 +233,38 @@ TabletopComposite --> "*" TabletopComponent
 
 ## Padrão aplicado no cenário
 
-No nosso cenário, estamos construindo um tabuleiro que pode ser composto por peças individuais ou agrupamentos de peças. Ao aplicar o padrão Composite, conseguimos manipular esses elementos de forma hierárquica e uniforme, facilitando operações complexas como movimentação, remoção ou adição de peças no tabuleiro.
-  
+O TabletopProduct precisa representar uma estrutura hierárquica contendo múltiplos elementos: tiles, células ou até grupos de células. Sem o uso do padrão Composite, seria necessário tratar cada componente individualmente, exigindo verificações manuais e lógicas duplicadas para iterar, renderizar ou interagir com os elementos do tabuleiro.
+
+Com o padrão Composite, criamos a interface TabletopComponent, implementada por TabletopLeaf e TabletopComposite. O tabuleiro pode ser modelado como uma árvore de componentes, em que cada Composite pode conter outros Component. Isso permite que o cliente trate estruturas compostas e elementos individuais de forma uniforme, facilitando operações recursivas como render() e tornando a estrutura extensível.
+
 ## Participantes 
 
+### Padrão Composite
 
-- **Component (TabletopComponent):**
-  - Declara a interface comum para objetos individuais e composições. Neste caso, define o método operation() que será implementado tanto pelas folhas quanto pelos compostos.
+| Participante       | Classe no Projeto        | Função                                                                 |
+|--------------------|--------------------------|------------------------------------------------------------------------|
+| **Component**      | `TabletopComponent`      | Interface comum para objetos folha e compostos. Define o método `operation()`. |
+| **Leaf**           | `TabletopLeaf`           | Representa objetos individuais (tiles simples) que não possuem filhos. |
+| **Composite**      | `TabletopComposite`      | Representa agrupamentos de componentes. Permite adicionar/remover/acessar filhos e delega operações para eles. |
 
-- **Leaf (TabletopLeaf):**
-  - Representa os objetos individuais que não possuem filhos.
-  - Implementa a interface TabletopComponent e define o comportamento específico dos objetos folha.
-  
-- **Composite (TabletopComposite):**
-  - Representa objetos que possuem filhos (outros componentes).
-  - Implementa métodos para adicionar, remover e acessar os filhos.
-  - Implementa a interface TabletopComponent de maneira a delegar operações para os filhos.
 
 ## Código 
 
 
 ### **TabletopComponent**
 
-```java
-package composite;
-// Interface comum para objetos individuais e composições
-public interface TabletopComponent {
-    String operation();
-}
-```
+@import "framework-tabuleiro/src/composite/composite/TabletopComponent.java"
+
 
 ### **TabletopComposite**
 
-```java
-package composite;
-// Objeto composto que pode conter folhas e outros compostos
-import java.util.ArrayList;
-import java.util.List;
+@import "framework-tabuleiro/src/composite/composite/TabletopComposite.java"
 
-import flyweight.TabletopFlyweightProduct;
-
-public class TabletopComposite implements TabletopComponent {
-    private String name;
-    private List<TabletopComponent> children;
-
-    public TabletopComposite(String name) {
-        this.name = name;
-        this.children = new ArrayList<>();
-    }
-
-    public void add(TabletopFlyweightProduct flyweight, int x, int y) {
-        this.children.add(new TabletopLeaf(flyweight, x, y));
-    }
-
-    @Override
-    public String operation() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Composite: ").append(name).append(" [");
-        for (int i = 0; i < children.size(); i++) {
-            sb.append(children.get(i).operation());
-            if (i < children.size() - 1) sb.append(", ");
-        }
-        sb.append("]");
-        return sb.toString();
-    }
-}
-```
 
 ### **TabletopLeaf**
 
-```java
-package composite;
+@import "framework-tabuleiro/src/composite/composite/TabletopLeaf.java"
 
-
-import flyweight.TabletopFlyweightProduct;
-
-public class TabletopLeaf implements TabletopComponent {
-    private TabletopFlyweightProduct flyweight;
-    private int x, y;
-
-    public TabletopLeaf(TabletopFlyweightProduct flyweight, int x, int y) {
-        this.flyweight = flyweight;
-        this.x = x;
-        this.y = y;
-    }
-
-    @Override
-    public String operation() {
-        return flyweight.operation("x:" + x + ",y:" + y);
-    }
-}
-```
 
 
 
