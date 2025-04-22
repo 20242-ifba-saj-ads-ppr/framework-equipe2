@@ -138,7 +138,6 @@ Com o uso do padrão Builder, essas etapas foram encapsuladas em implementaçõe
 @import "framework-tabuleiro/src/builder/TabletopDirector.java"
 
 ## 2. Factory Method
-# Factory Method Pattern
 
 ##  Intenção
 
@@ -453,11 +452,140 @@ end note
 
 ```
 
-Encapsular a lógica de criação de peças em um único lugar
+- Encapsular a lógica de criação de peças em um único lugar
 
-Desacoplar o código cliente (como o TabletopBuilder) dos detalhes de instanciamento
+- Desacoplar o código cliente (como o TabletopBuilder) dos detalhes de instanciamento
 
-Facilitar a criação de variações do jogo, com outras regras ou conjuntos de peças, apenas trocando a implementação da fábrica
+- Facilitar a criação de variações do jogo, com outras regras ou conjuntos de peças, apenas trocando a implementação da fábrica
+
+### Estrutura do padrão (GOF - Papeis)
+
+## Padrão aplicado no cenário
+
+Durante a construção do jogo  Selva, é necessário posicionar diversas peças com comportamentos e nomes específicos. Sem a aplicação de Abstract Factory, o código de montagem teria que conhecer diretamente todas as classes concretas de peças, como `Peca`, `NullPiece`, ou qualquer outra personalizada. Isso criaria um forte acoplamento entre o construtor do tabuleiro (como `SelvaTabletopBuilder`) e as peças criadas, dificultando a manutenção e impedindo a variação temática do jogo.
+
+Com Abstract Factory, extraímos a lógica de criação das peças para uma interface `SelvaPieceFactory`. O builder então solicita uma peça sem saber qual classe concreta será retornada — ele apenas chama `factory.createLion()` ou `factory.createDefault()`. Isso permite trocar toda a família de peças (por exemplo, peças de xadrez ou de outro tema) apenas injetando uma nova implementação da fábrica, sem alterar o código de montagem ou o restante do framework.
+
+## Participantes
+| Participante       | Classe no Projeto        | Função                                                                 |
+|--------------------|--------------------------|------------------------------------------------------------------------|
+| **AbstractFactory** | `SelvaPieceFactory`      | Declara a interface para operações que criam objetos de peças abstratas (`Peca`). |
+| **ConcreteFactory** | `SelvaPieceFactoryImpl`  | Implementa as operações de criação de objetos concretos. Cria peças concretas (como `Leão`, `Elefante`, etc.). |
+| **AbstractProduct** | `Peca`                   | Declara a interface para os objetos produto, neste caso, as peças do jogo. Define métodos como `mover()`, `getNome()`, `getPosition()`, entre outros. |
+| **ConcreteProduct** | `Leao`, `Elefante`, `Tigre`, `Rato`, etc. | Define os objetos concretos que são instanciados pelas fábricas concretas (peças específicas com suas respectivas estratégias de movimento). |
+| **Client**          | `TabletopBuilder`        | O Builder age como o "cliente" que utiliza a `SelvaPieceFactory` para criar as peças, configurar o tabuleiro e delegar o processo de criação sem se preocupar com a implementação concreta. |
+
+## Código
+
+### **AbstractFactory (SelvaPieceFactory)**
+@import "framework-tabuleiro/src/abstractfactory/SelvaPieceFactory.java"
+
+### **ConcreteFactory(SelvaPieceFactoryImpl)**
+@import "framework-tabuleiro/src/abstractfactory/SelvaPieceFactoryImpl.java"
+
+### **AbstractProduct(Peca)**
+@import "framework-tabuleiro/src/context/Peca.java"
+
+### **ConcreteProduct(Leao,Tigre etc..)**
+@import "framework-tabuleiro/src/abstractfactory/SelvaPieceFactory.java"
+
+### **Client (TabletopBuilder)**
+
+@import "framework-tabuleiro/src/builder/TabletopBuilder.java"
+
+## 4. Strategy Pattern
+
+## Intenção
+Definir uma família de algoritmos, encapsular cada uma delas e torná-las intercambiáveis. Strategy permite que o algoritmo varie independentemente dos clientes que o utilizam.
+
+## Motivação
+Em um framework de jogo de tabuleiro, diferentes peças podem ter regras de movimentação distintas. Sem o padrão Strategy, teríamos que ter uma lógica condicional pesada dentro de cada peça para tratar variações no movimento (como movimentos básicos, saltos, ou movimentos especiais). Isso acarreta:
+
+- Toda a lógica de movimentação ficaria acoplada à classe da peça, dificultando a manutenção e a extensão.
+
+- Alterar uma regra de movimentação implicaria alterar a classe da peça diretamente, afetando possivelmente várias áreas do sistema.
+
+- Permite utilizar o mesmo algoritmo de movimentação para diferentes tipos de peças, promovendo a reutilização e a consistência.
+
+```plantuml 
+
+@startuml
+class Peca {
+    + mover(board, origemX, origemY, destinoX, destinoY, subject): boolean
+    - lógica de movimento condicional interna
+}
+Client --> Peca : "chama mover()"
+@enduml
+
+```
+
+Com o Strategy, encapsulamos as diferentes regras de movimentação em classes separadas. Assim, a peça se torna um contexto que delega a sua operação de movimento à estratégia vigente, permitindo a mudança dinâmica do comportamento sem alterar o código da peça.
+
+```plantuml 
+@startuml
+interface MovimentoStrategy {
+    + mover(peca, board, origemX, origemY, destinoX, destinoY, subject): boolean
+}
+
+class LeaoMovimentoStrategy {
+    + mover(...)
+}
+
+class TigreMovimentoStrategy {
+    + mover(...)
+}
+
+class Peca {
+    - movimentoStrategy: MovimentoStrategy
+    + mover(...): boolean
+    + setMovimentoStrategy(strategy: MovimentoStrategy)
+}
+
+Client --> Peca : "chama mover()"
+Peca --> MovimentoStrategy : "delegar mover()"
+LeaoMovimentoStrategy ..> MovimentoStrategy
+TigreMovimentoStrategy ..> MovimentoStrategy
+@enduml
+```
+
+## Estrutura do Padrão (GOF - Papéis)
+
+### Participantes
+
+| Participante       | Classe no Projeto        | Função                                                                 |
+|--------------------|--------------------------|------------------------------------------------------------------------|
+| **Strategy**        | `MovimentoStrategy`      | Declara a interface para a estratégia de movimento das peças. Define o método `mover()`. |
+| **ConcreteStrategy** | `LeaoMovimentoStrategy`, `ElefanteMovimentoStrategy`, `TigreMovimentoStrategy`, etc. | Implementam o comportamento de movimento específico para cada tipo de peça (Leão, Elefante, Tigre, etc.). |
+| **Context**         | `Peca`                   | A peça que utiliza a estratégia de movimento. Define o método `setMovimentoStrategy()` para alterar a estratégia de movimento em tempo de execução. |
+| **Client**          | `TabletopBuilder`        | O Builder que configura as peças do jogo e as associa com suas respectivas estratégias de movimento através da fábrica (`SelvaPieceFactory`). |
+
+
+## Exemplo de Código
+
+#### Strategy - (MovimentoStrategy)
+@import "framework-tabuleiro/src/strategy/MovimentoStrategy.java"
+
+
+#### ConcreteStrategy (LeaoMovimentoStrategy,ElefanteMovimentoStrategy,GatoMovimentoStrategy, LeopardoMovimentoStrategy,LoboMovimentoStrategy,CaoMovimentoStrategy,RatoMovimentoStrategy MovimentoBasicoStrategy, TigreMovimentoStrategy) 
+@import "framework-tabuleiro/src/strategy/LeaoMovimentoStrategy.java"
+@import "framework-tabuleiro/src/strategy/ElefanteMovimentoStrategy.java"
+@import "framework-tabuleiro/src/strategy/GatoMovimentoStrategy.java"
+@import "framework-tabuleiro/src/strategy/LeopardoMovimentoStrategy.java"
+@import "framework-tabuleiro/src/strategy/LoboMovimentoStrategy.java"
+@import "framework-tabuleiro/src/strategy/CaoMovimentoStrategy.java"
+@import "framework-tabuleiro/src/strategy/RatoMovimentoStrategy.java"
+@import "framework-tabuleiro/src/strategy/TigreMovimentoStrategy.java"
+
+@import "framework-tabuleiro/src/strategy/MovimentoBasicoStrategy.java"
+
+
+#### Context (Peca)
+@import "framework-tabuleiro/src/context/Peca.java"
+
+#### Client (TabletopBuilder)
+@import "framework-tabuleiro/src/builder/TabletopBuilder.java"
+
+
 
 ## 2. Composite
 
@@ -1316,209 +1444,7 @@ public class CommandLogManager {
 
 - Registro e Persistência: Com a serialização e armazenamento no log, o sistema pode restaurar jogadas, facilitando a análise e correção de erros após uma queda de sistema.
 
-# Strategy Pattern
 
-## Intenção
-Definir uma família de algoritmos, encapsular cada uma delas e torná-las intercambiáveis. Strategy permite que o algoritmo varie independentemente dos clientes que o utilizam.
-
-## Motivação
-Em um framework de jogo de tabuleiro, diferentes peças podem ter regras de movimentação distintas. Sem o padrão Strategy, teríamos que ter uma lógica condicional pesada dentro de cada peça para tratar variações no movimento (como movimentos básicos, saltos, ou movimentos especiais). Isso acarreta:
-
-- Complexidade e Acoplamento: Toda a lógica de movimentação ficaria acoplada à classe da peça, dificultando a manutenção e a extensão.
-
-- Dificuldade para Modificar Algoritmos: Alterar uma regra de movimentação implicaria alterar a classe da peça diretamente, afetando possivelmente várias áreas do sistema.
-
-- Reutilização de Algoritmos: Permite utilizar o mesmo algoritmo de movimentação para diferentes tipos de peças, promovendo a reutilização e a consistência.
-
-```plantuml 
-
-@startuml
-class Peca {
-    + mover(board, origemX, origemY, destinoX, destinoY, subject): boolean
-    - lógica de movimento condicional interna
-}
-Client --> Peca : "chama mover()"
-@enduml
-
-```
-
-Com o Strategy, encapsulamos as diferentes regras de movimentação em classes separadas. Assim, a peça se torna um contexto que delega a sua operação de movimento à estratégia vigente, permitindo a mudança dinâmica do comportamento sem alterar o código da peça.
-
-```plantuml 
-@startuml
-interface MovimentoStrategy {
-    + mover(peca, board, origemX, origemY, destinoX, destinoY, subject): boolean
-}
-
-class LeaoMovimentoStrategy {
-    + mover(...)
-}
-
-class TigreMovimentoStrategy {
-    + mover(...)
-}
-
-class Peca {
-    - movimentoStrategy: MovimentoStrategy
-    + mover(...): boolean
-    + setMovimentoStrategy(strategy: MovimentoStrategy)
-}
-
-Client --> Peca : "chama mover()"
-Peca --> MovimentoStrategy : "delegar mover()"
-LeaoMovimentoStrategy ..> MovimentoStrategy
-TigreMovimentoStrategy ..> MovimentoStrategy
-@enduml
-```
-
-## Estrutura do Padrão (GOF - Papéis)
-### Participantes
-
-- **Strategy (Interface MovimentoStrategy):**
-  - Declara uma interface para o algoritmo de movimentação, possibilitando que diferentes implementações sejam utilizadas de forma intercambiável.
-
-- **ConcreteStrategy (LeaoMovimentoStrategy, TigreMovimentoStrategy):**
-  - Implementa a interface MovementStrategy com comportamentos específicos. Por exemplo, LeaoMovimentoStrategy define as regras de movimento para o Leão (movimento básico e salto sobre água).
-
-- **Context (Peca):**
-  - Possui uma referência a um objeto do tipo MovimentoStrategy e delega a operação de movimento a essa estratégia. O contexto pode alterar a estratégia em tempo de execução para mudar seu comportamento.
-
-- **Client:**
-  - Configura o contexto com uma estratégia concreta e invoca a operação de movimento, sem se preocupar com os detalhes de implementação do algoritmo.
-
-## Exemplo de Código
-
-#### Interface MovimentoStrategy
-
-```java
-package strategy;
-
-import builder.TabletopProduct;
-import observer.TabletopSubject;
-
-public interface MovimentoStrategy {
-    
-    boolean mover(Object peca, TabletopProduct board,
-                  int origemX, int origemY, 
-                  int destinoX, int destinoY,
-                  TabletopSubject subject);
-}
-```
-
-#### LeaoMovimentoStrategy - ConcreteStrategy
-
-```java
-package strategy;
-
-import builder.TabletopProduct;
-import observer.TabletopSubject;
-
-public class LeaoMovimentoStrategy implements MovimentoStrategy {
-
-    @Override
-    public boolean mover(Object peca, TabletopProduct board,
-                         int origemX, int origemY, 
-                         int destinoX, int destinoY,
-                         TabletopSubject subject) {
-        
-      
-        boolean movimentoValido = verificaMovimentoBasico(origemX, origemY, destinoX, destinoY);
-        
- 
-        if (estaSaltandoSobreAgua(origemX, origemY, destinoX, destinoY)) {
-            
-            movimentoValido = true; 
-        }
-        
-        if (movimentoValido) {
-            atualizarTabuleiro(board, origemX, origemY, destinoX, destinoY, peca);
-            
-            
-            subject.notifyObservers("Leão moveu-se de (" + origemX + "," + origemY + 
-                                    ") para (" + destinoX + "," + destinoY + ")");
-        }
-        
-        return movimentoValido;
-    }
-    
-  
-    private boolean verificaMovimentoBasico(int ox, int oy, int dx, int dy) {
-        int difX = Math.abs(dx - ox);
-        int difY = Math.abs(dy - oy);
-        return ((difX == 1 && difY == 0) || (difX == 0 && difY == 1));
-    }
-
-    private boolean estaSaltandoSobreAgua(int ox, int oy, int dx, int dy) {
-        int distancia = Math.abs(dx - ox) + Math.abs(dy - oy);
-        return (distancia > 1);
-    }
-    
-  
-    private void atualizarTabuleiro(TabletopProduct board,
-                                    int origemX, int origemY,
-                                    int destinoX, int destinoY, Object peca) {
-   
-        System.out.println("Atualizando tabuleiro: movendo peça de (" 
-                            + origemX + "," + origemY + ") para (" 
-                            + destinoX + "," + destinoY + ").");
-    }
-}
-
-```
-
-#### Context (Peca)
-
-```java
-package context; 
-
-import builder.TabletopProduct;
-import observer.TabletopSubject;
-import strategy.MovimentoStrategy;
-import state.PecaState;
-import state.NormalState;
-
-public class Peca {
-    
-    private String nome;
-    private MovimentoStrategy movimentoStrategy;
-    
-    private PecaState state;
-    
-    public Peca(String nome, MovimentoStrategy movimentoStrategy) {
-        this.nome = nome;
-        this.movimentoStrategy = movimentoStrategy;
-        this.state = new NormalState();
-    }
-    
-    public void setMovimentoStrategy(MovimentoStrategy movimentoStrategy) {
-        this.movimentoStrategy = movimentoStrategy;
-    }
-    
-    public MovimentoStrategy getMovimentoStrategy() {
-        return movimentoStrategy;
-    }
-    
-    public void setState(PecaState state) {
-        this.state = state;
-    }
-    
-    public PecaState getState() {
-        return state;
-    }
-    
-    public boolean mover(TabletopProduct board,
-                         int origemX, int origemY,
-                         int destinoX, int destinoY,
-                         TabletopSubject subject) {
-        return state.mover(this, board, origemX, origemY, destinoX, destinoY, subject);
-    }
-    
-    public String getNome() {
-        return nome;
-    }
-}
-
-```
 
 ## Considerações Finais
 - **Desacoplamento do Algoritmo:**
