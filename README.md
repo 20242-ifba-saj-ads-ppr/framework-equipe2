@@ -137,9 +137,331 @@ Com o uso do padrão Builder, essas etapas foram encapsuladas em implementaçõe
 
 @import "framework-tabuleiro/src/builder/TabletopDirector.java"
 
+## 2. Factory Method
+# Factory Method Pattern
+
+##  Intenção
+
+Definir uma interface para criar um objeto, mas deixar as subclasses decidirem que classe instanciar. O Factory Method permite adiar a instanciação para subclasses.
+
+## Motivação
+
+Em um framework de jogo de tabuleiro como o Selva, as células do tabuleiro possuem diferentes tipos (grama, água, armadilhas, tocas), e a criação de cada tipo deve seguir regras específicas de posicionamento. Sem um padrão adequado, o código cliente precisaria instanciar manualmente as classes concretas (LandCell, TrapCell, DenCell, etc.), o que tornaria o sistema rígido, com alto acoplamento e difícil de manter.
+
+```plantuml
+@startuml
+title Criação manual de células no Jogo Selva (sem Factory Method)
+
+
+class LandCell {
+  + LandCell(pos: Position)
+}
+class WaterCell {
+  + WaterCell(pos: Position)
+}
+class TrapCell {
+  + TrapCell(pos: Position, isWhite: boolean)
+}
+class DenCell {
+  + DenCell(pos: Position, isWhite: boolean)
+}
+
+class Position
+
+Cliente --> LandCell      : new(...)
+Cliente --> WaterCell     : new(...)
+Cliente --> TrapCell      : new(...)
+Cliente --> DenCell       : new(...)
+
+LandCell --> Position
+WaterCell --> Position
+TrapCell --> Position
+DenCell --> Position
+
+note right of Cliente
+Sem Factory Method:\n
+- Código cliente depende de várias classes concretas\n
+- Alto acoplamento\n
+- Lógica de decisão espalhada (if/switch)\n
+- Dificuldade para manutenção e extensão
+end note
+@enduml
+```  
+
+Com o Factory Method, o processo de criação é encapsulado em um criador abstrato, permitindo a flexibilidade e a reutilização do código ao instanciar os produtos corretos conforme a necessidade.
+
+```plantuml
+@startuml
+title Criação de células com Factory Method - Jogo Selva
+
+package factorymethod {
+class CellCreator {
+  + createCell(pos: Position): CellAbstractProduct
+  # factoryMethod(pos: Position): CellAbstractProduct
+}
+
+abstract class CellAbstractProduct {
+  - pos: Position
+  - type: CellType
+  + getPosition(): Position
+  + getType(): CellType
+  + render(flyFactory): void
+  + clone(): CellAbstractProduct
+}
+
+class SelvaCellCreator {
+  + factoryMethod(pos: Position): CellAbstractProduct
+}
+
+
+class LandCell
+class WaterCell
+class TrapCell
+class DenCell
+
+CellCreator <|-- SelvaCellCreator
+CellAbstractProduct <|-- LandCell
+CellAbstractProduct <|-- WaterCell
+CellAbstractProduct <|-- TrapCell
+CellAbstractProduct <|-- DenCell
+
+TabletopBuilder--> CellCreator : createCell(pos)
+SelvaCellCreator --> LandCell : cria
+SelvaCellCreator --> WaterCell : cria
+SelvaCellCreator --> TrapCell : cria
+SelvaCellCreator --> DenCell : cria
+
+CellAbstractProduct --> Position
+CellAbstractProduct --> CellType
+
+
+
+note right of TabletopBuilder
+TabletopBuilder usa a interface
+CellCreator para criar células.
+Não conhece as classes concretas.
+end note
+@enduml
+```
+
+## Estrutura do Padrão (GOF - Papéis)
+
+![image](https://github.com/user-attachments/assets/ab5b3e4e-51b1-41c1-a768-3d4332d3d7cf)
+
+## Padrão aplicado no cenário
+
+Durante a construção do tabuleiro, diferentes tipos de células precisam ser criadas no jogo Selva (como LandCell, TrapCell, WaterCell, etc.). Com o padrão Factory Method, cada tipo de célula possui seu próprio CellCreator concreto, como WaterCellCreator, que encapsula a lógica de criação. O cliente trabalha com a interface CellCreator e não precisa conhecer a implementação real. Isso facilita a extensão do sistema com novos tipos de célula, respeitando o princípio do aberto-fechado.
+
+## Participantes
+
+| Papel                   | Classe                     | Descrição                                                                                                                                       |
+|-------------------------|----------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Creator**             | `CellCreator`              | Classe abstrata que declara o método `createCell(pos)` e delega a criação ao `factoryMethod(pos)`. Fornece uma interface comum para criadores de células. |
+| **ConcreteCreator**     | `SelvaCellCreator`         | Implementa `factoryMethod(pos)` com lógica de decisão baseada na posição, criando diferentes tipos de células (`LandCell`, `WaterCell`, etc.). |
+| **ConcreteCreator**     | `LandCellCreator`, `TrapCellCreator`, etc. | Fornecem implementação direta e fixa de um tipo específico de célula do jogo (`LAND`, `TRAP`, etc.).                                           |
+| **Product**             | `CellAbstractProduct`      | Classe abstrata que define a interface comum para todas as células do jogo. Define métodos como `render()` e `clone()`.                        |
+| **ConcreteProduct**     | `LandCell`, `WaterCell`, `TrapCell`, `DenCell` | Implementam `CellAbstractProduct` com comportamentos específicos de cada tipo de célula.                                                        |
+| **Cliente**             | `TabletopBuilder`          | Usa o Factory Method indiretamente ao chamar `createCell()` no processo de construção do tabuleiro, desacoplando o cliente das classes concretas. |
+
+
+---
+
+## Código
+
+### **TabletopAbstractProduct (CellAbstractProduct)**
+
+@import "framework-tabuleiro/src/factorymethod/CellAbstractProduct.java"
+
+@import "framework-tabuleiro/src/factorymethod/TabletopAbstractProduct.java"
+
+
+### **TabletpoConcreteCreator (DenBlackCellCreator, DenWhiteCellCreator,WaterCellCreator,LandCellCreator, TrapWhiteCellCreator, TrapBlackCellCreator, SelvaCellCreator)**
+
+@import "framework-tabuleiro/src/factorymethod/DenBlackCellCreator.java"
+
+@import "framework-tabuleiro/src/factorymethod/DenWhiteCellCreator.java"
+
+@import "framework-tabuleiro/src/factorymethod/WaterCellCreator.java"
+
+@import "framework-tabuleiro/src/factorymethod/LandCellCreator.java"
+
+@import "framework-tabuleiro/src/factorymethod/TrapWhiteCellCreator.java"
+
+@import "framework-tabuleiro/src/factorymethod/TrapBlackCellCreator.java"
+
+@import "framework-tabuleiro/src/factorymethod/TabletopConcreteCreator.java"
+
+@import "framework-tabuleiro/src/factorymethod/SelvaCellCreator.java"
+
+### **TabletopConcreteProduct (LandCell,DenCell,WaterCell,TrapCell)**
+
+@import "framework-tabuleiro/src/factorymethod/DenCell.java"
+
+@import "framework-tabuleiro/src/factorymethod/WaterCell.java"
+
+@import "framework-tabuleiro/src/factorymethod/TrapCell.java"
+
+@import "framework-tabuleiro/src/factorymethod/TabletopConcreteProduct.java"
+
+
+### **TabletopCreator, CellCreator**
+
+
+@import "framework-tabuleiro/src/factorymethod/TabletopCreator.java"
+
+@import "framework-tabuleiro/src/factorymethod/CellCreator.java"
+
+
+## 3. Abstract Factory
+
+## Intenção 
+
+Fornecer uma interface para criação de famílias de objetos relacionados ou dependentes sem especificar suas classes concretas.
+
+## Motivação
+
+Em um jogo como Selva, cada jogador possui várias peças diferentes (Leão, Elefante, Rato, etc.), e cada uma dessas peças precisa ser criada com:
+
+Um nome específico
+
+Uma estratégia de movimentação diferente
+
+Um lado (branco ou preto)
+
+E uma posição inicial no tabuleiro
+
+Sem um padrão adequado, o código de inicialização do jogo precisaria conter múltiplas linhas como:
+
+```java
+Peca leaoBranco = new Peca("Leão", PlayerSide.WHITE, new LeaoMovimentoStrategy(), new Position(0, 3));
+Peca elefantePreto = new Peca("Elefante", PlayerSide.BLACK, new ElefanteMovimentoStrategy(), new Position(6, 2));
+// e assim por diante...
+```
+
+**UML - Sem Padrão** 
+
+```plantuml
+@startuml
+title Criação manual das peças (sem Abstract Factory)
+
+class Peca {
+  - nome: String
+  - side: PlayerSide
+  - movimentoStrategy: MovimentoStrategy
+  - position: Position
+  + Peca(nome: String, side: PlayerSide, movimentoStrategy: MovimentoStrategy, position: Position)
+}
+
+class LeaoMovimentoStrategy {
+  + mover(): boolean
+}
+
+class ElefanteMovimentoStrategy {
+  + mover(): boolean
+}
+
+class Position {
+  - row: int
+  - col: int
+  + Position(row: int, col: int)
+}
+
+class PlayerSide {
+  + WHITE
+  + BLACK
+}
+
+Peca -- Position : uses
+Peca -- LeaoMovimentoStrategy : uses
+Peca -- ElefanteMovimentoStrategy : uses
+Peca "1" *-- "*" PlayerSide : "belongs to"
+
+note right of Peca
+A criação das peças precisa passar por parâmetros concretos e instanciamento explícito, o que aumenta o acoplamento.
+end note
+
+Peca "1" --> "1" LeaoMovimentoStrategy : "leão branco usa"
+Peca "1" --> "1" ElefanteMovimentoStrategy : "elefante preto usa"
+
+@enduml
+
+
+```
+
+Com o uso do padrão Abstract Factory, definimos uma interface para criação de famílias de peças relacionadas, e implementamos essa fábrica conforme as regras do jogo Selva. Isso permite:
+
+```plantuml
+@startuml
+title Uso do Abstract Factory - Jogo Selva
+
+class SelvaPieceFactory {
+  + createLeao(side: PlayerSide): Peca
+  + createElefante(side: PlayerSide): Peca
+  + createTigre(side: PlayerSide): Peca
+  + createLeopardo(side: PlayerSide): Peca
+  + createCao(side: PlayerSide): Peca
+}
+
+class SelvaPieceFactoryImpl {
+  + createLeao(side: PlayerSide): Peca
+  + createElefante(side: PlayerSide): Peca
+  + createTigre(side: PlayerSide): Peca
+  + createLeopardo(side: PlayerSide): Peca
+  + createCao(side: PlayerSide): Peca
+}
+
+class Peca {
+  - nome: String
+  - side: PlayerSide
+  - movimentoStrategy: MovimentoStrategy
+  - position: Position
+  + Peca(nome: String, side: PlayerSide, movimentoStrategy: MovimentoStrategy, position: Position)
+}
+
+class LeaoMovimentoStrategy {
+  + mover(): boolean
+}
+
+class ElefanteMovimentoStrategy {
+  + mover(): boolean
+}
+
+class Position {
+  - row: int
+  - col: int
+  + Position(row: int, col: int)
+}
+
+class PlayerSide {
+  + WHITE
+  + BLACK
+}
+
+SelvaPieceFactory <|-- SelvaPieceFactoryImpl : implements
+SelvaPieceFactoryImpl --> Peca : "cria"
+SelvaPieceFactoryImpl --> LeaoMovimentoStrategy : "usa"
+SelvaPieceFactoryImpl --> ElefanteMovimentoStrategy : "usa"
+
+Peca --> Position : "tem posição"
+Peca --> PlayerSide : "pertence a"
+
+note right of SelvaPieceFactoryImpl
+A fábrica abstrata permite a criação das peças sem expor detalhes de instânciação ao cliente.
+end note
+
+@enduml
+
+```
+
+Encapsular a lógica de criação de peças em um único lugar
+
+Desacoplar o código cliente (como o TabletopBuilder) dos detalhes de instanciamento
+
+Facilitar a criação de variações do jogo, com outras regras ou conjuntos de peças, apenas trocando a implementação da fábrica
+
 ## 2. Composite
 
-###  Intenção
+## Intenção
 
 Compor objetos em estruturas de árvore para representarem hierarquias partes-todo. Composite permite aos clientes tratarem de maneira uniforme objetos individuais e composições de objetos.
 
@@ -749,187 +1071,6 @@ public abstract class TabletopSubject {
 }
 ```
 
-# Factory Method Pattern
-
-##  Intenção
-
-Definir uma interface para criar um objeto, mas deixar as subclasses decidirem que classe instanciar. O Factory Method permite adiar a instanciação para subclasses.
-
-## Motivação
-
-Em um framework de jogo de tabuleiro, a criação de diferentes produtos (como peças, tabuleiros ou componentes) pode variar conforme o contexto e as regras do jogo. Sem um padrão de criação centralizada, o código cliente precisaria conhecer os detalhes de instanciamento de cada produto, aumentando o acoplamento e a complexidade. 
-```plantuml
-@startuml
-
-' Classe principal que gerencia o produto
-class TabletopManager {
-    - name: String
-    + TabletopManager(name: String)
-    + createProduct(): TabletopConcreteProduct
-    --
-    "return new TabletopConcreteProduct(name)"
-}
-
-' Produto concreto
-class TabletopConcreteProduct {
-    - name: String
-    + TabletopConcreteProduct(name: String)
-    + describe(): String
-    + getName(): String
-}
-
-' Relacionamento de uso direto
-TabletopManager --> TabletopConcreteProduct : "createProduct()"
-@enduml
-```  
-
-Com o Factory Method, o processo de criação é encapsulado em um criador abstrato, permitindo a flexibilidade e a reutilização do código ao instanciar os produtos corretos conforme a necessidade.
-
-```plantuml
-@startuml
-
-' Classe criadora abstrata
-abstract class TabletopCreator {
-    + factoryMethod(): TabletopAbstractProduct
-    + anOperation(): void
-    --
-    "product = factoryMethod()"
-}
-
-' Classe criadora concreta
-class TabletopConcreteCreator {
-    - name: String
-    + TabletopConcreteCreator(name: String)
-    + factoryMethod(): TabletopAbstractProduct
-    --
-    "return new TabletopConcreteProduct(name)"
-}
-
-' Produto abstrato
-abstract class TabletopAbstractProduct {
-    + describe(): String
-}
-
-' Produto concreto
-class TabletopConcreteProduct {
-    - name: String
-    + TabletopConcreteProduct(name: String)
-    + describe(): String
-    + getName(): String
-}
-
-' Relações de herança
-TabletopCreator <|-- TabletopConcreteCreator
-TabletopAbstractProduct <|-- TabletopConcreteProduct
-
-' Dependência (Creator -> Product)
-TabletopCreator --> TabletopAbstractProduct : "factoryMethod()"
-
-@enduml
-```
-
-## Estrutura do Padrão (GOF - Papéis)
-
-![image](https://github.com/user-attachments/assets/ab5b3e4e-51b1-41c1-a768-3d4332d3d7cf)
-
-
-## Participantes
-
-- **Creator (TabletopCreator):**
-  - Classe abstrata que declara o método `factoryMethod()`, responsável pela criação do produto abstrato.
-  - Possui também o método `createProduct()`, que chama o `factoryMethod()` e retorna o produto.
-
-- **ConcreteCreator (TabletopConcreteCreator):**
-  - Implementa o método `factoryMethod()`, instanciando um produto concreto de acordo com a lógica do sistema.
-
-- **Product (TabletopAbstractProduct):**
-  - Classe abstrata que define a interface dos produtos criados.
-  - Declara o método `describe()`, que será implementado pelas classes concretas.
-
-- **ConcreteProduct (TabletopConcreteProduct):**
-  - Implementa a interface do produto, fornecendo uma descrição e métodos específicos para o produto concreto.
-
----
-
-## Código
-
-### **TabletopAbstractProduct**
-```java
-// Produto abstrato
-public abstract class TabletopAbstractProduct {
-    public abstract String describe();
-}
-```
-### **TabletpoConcreteCreator**
-```java
-// Criador concreto
-public class TabletopConcreteCreator extends TabletopCreator {
-    private String name;
-
-    public TabletopConcreteCreator(String name) {
-        this.name = name;
-    }
-
-    @Override
-    public TabletopAbstractProduct factoryMethod() {
-        return new TabletopConcreteProduct(name);
-    }
-}
-```
-### **TabletopConcreteProduct**
-```java
-// Produto concreto
-public class TabletopConcreteProduct extends TabletopAbstractProduct {
-    private String name;
-
-    public TabletopConcreteProduct(String name) {
-        this.name = name;
-    }
-
-    @Override
-    public String describe() {
-        return "ConcreteProduct: " + name;
-    }
-
-    public String getName() {
-        return name;
-    }
-}
-```
-
-### **TabletopCreator**
-```java
-// Criador abstrato
-public abstract class TabletopCreator {
-    public abstract TabletopAbstractProduct factoryMethod();
-
-    public TabletopAbstractProduct createProduct() {
-        return factoryMethod();
-    }
-}
-```
-### **TableConcreteCreator**
-```java
-// Produto concreto
-public class TabletopConcreteProduct extends TabletopAbstractProduct {
-    private String name;
-
-    public TabletopConcreteProduct(String name) {
-        this.name = name;
-    }
-
-    @Override
-    public String describe() {
-        return "ConcreteProduct: " + name;
-    }
-
-    public String getName() {
-        return name;
-    }
-}
-
-
-```
 
 
 

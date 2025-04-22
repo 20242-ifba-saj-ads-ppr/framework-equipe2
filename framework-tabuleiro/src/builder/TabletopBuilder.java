@@ -28,7 +28,7 @@ public abstract class TabletopBuilder {
         return this;
     }
 
-    /** Preenche cada célula com fábrica de células. */
+
     
     public abstract TabletopBuilder buildCells(CellCreator cellFactory,
                                               TabletopFlyweightFactory flyFactory);
