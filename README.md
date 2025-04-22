@@ -6,12 +6,31 @@ Elaborar um framework, com no mínimo 12 dos padrões de projetos vistos na disc
 
 ## Resumo - Padrões Utilizados no Framework: 
 
+| Padrão                | Intenção                                                                                                                                       | Uso no Projeto                                                                                                       |
+|-----------------------|------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
+| Abstract Factory      | Fornecer uma interface para criar famílias de objetos relacionados sem expor suas classes concretas.                                          | `SelvaPieceFactoryImpl` gera cada peça (`Elefante`, `Leão` etc.) com nome, lado e estratégia corretos.              |
+| Builder               | Construir objetos complexos passo a passo, isolando a lógica de construção.                                                                    | `SelvaTabletopBuilder` (via `TabletopDirector`) monta células, tiles (visuais) e posiciona peças, retornando o tabuleiro. |
+| Factory Method        | Delegar a criação de um objeto a subclasses, escondendo a lógica de “qual classe instanciar”.                                                 | `SelvaCellCreator` escolhe que tipo de célula (`LandCell`, `WaterCell`, `TrapCell`, `DenCell`) criar para cada posição. |
+| Prototype             | Clonar objetos existentes em vez de criá‑los do zero, facilitando cópias profundas ou rasas.                                                  | `TabletopConcretePrototype.deepClone()` copia células, tiles e peças para salvar/restaurar estados do tabuleiro.     |
+| Singleton             | Garantir que uma classe tenha apenas uma instância e fornecer um ponto de acesso global.                                                      | `TurnManager` controla de forma centralizada de quem é a vez de jogar.                                               |
+| Flyweight             | Compartilhar objetos imutáveis e pesados (estado intrínseco) para economizar memória.                                                         | `TabletopFlyweightFactory` reaproveita instâncias de ícones/tiles (água, grama, tocas, armadilhas).                |
+| Composite             | Tratar composições e objetos simples uniformemente através de uma interface comum.                                                             | `TabletopComposite` agrupa `TabletopLeaf` (tiles renderizados) para montar toda a visão visual do tabuleiro.        |
+| Strategy              | Encapsular algoritmos intercambiáveis e escolher o comportamento em tempo de execução.                                                         | Diversas `*MovimentoStrategy` definem regras de movimento/captura para cada tipo de peça.                          |
+| State                 | Alterar o comportamento de um objeto quando seu estado interno muda, sem expor classes internas.                                               | `NormalState` permite mover; `BloqueadaState` bloqueia o movimento de uma peça.                                     |
+| Template Method       | Definir o esqueleto de um algoritmo em uma classe-mãe, deixando que subclasses completem etapas específicas.                                    | `AbstractBoardDivider` orienta a divisão “branco”/“preto” do tabuleiro, `StandardBoardDivider` implementa os detalhes. |
+| Command + Memento     | Encapsular requisições como objetos (`Command`) e salvar/restaurar estado anterior (`Memento`) para permitir `undo` e `replay`.                | `MoverPecaCommand` registra cada jogada, `BoardMemento` salva o estado do tabuleiro para desfazer movimentos.      |
+| Observer              | Notificar objetos interessados quando um sujeito muda de estado, mantendo baixo acoplamento.                                                   | `TabletopSubject` avisa `TabletopConcreteObserver` sobre eventos (tabuleiro configurado, peça movida, undo).       |
+| Chain of Responsibility | Passar uma requisição através de uma cadeia de validadores até que um aceite ou rejeite a ação, separando as checagens.                     | `MoveValidator` e subclasses validam cada regra de movimento antes de executar o comando.                           |
+| Front Controller      | Centralizar o ponto de entrada de comandos (ou requisições), despachando cada um para o serviço ou estado apropriado.                           | `GameController` lê comandos do usuário (`start`, `move`, `undo`, `replay`, `end`) e gerencia o ciclo de jogo.     |
+
+## Padrões Utilizados no Framework/Jogo Selva
+
 ## Builder
 
 ### Intenção
 
 Separar a construção de um objeto complexo da sua representação de modo que o mesmo processo de construção possa criar diferentes representações.
-(GOF)
+
 
 ### Motivação
 Para construir objetos complexos — como peças, células e componentes de um jogo de tabuleiro (TabletopProduct) que possui uma área definida e uma coleção de elementos (como tiles e pieces) — é necessário adotar uma estratégia que permita a configuração gradual e flexível desses objetos, evitando a exposição de um construtor com múltiplos parâmetros.
