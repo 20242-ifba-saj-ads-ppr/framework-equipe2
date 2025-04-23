@@ -1882,6 +1882,9 @@ end note
 ```
 ## Estrutura do Padrão - GOF
 
+![image](https://github.com/user-attachments/assets/7983f6a4-5995-41a7-b66f-77c094cf227f)
+
+
 ## Padrão utilizado no cenário
 
 O sistema de jogo envolve múltiplos subsistemas interdependentes: construção do tabuleiro com Builder, execução de comandos, controle de turnos, aplicação de estratégias de movimento, validações e notificações via Observer. Sem um ponto de entrada unificado, o cliente teria que instanciar e coordenar todos esses módulos manualmente, o que geraria um código altamente acoplado e difícil de manter.
@@ -2099,6 +2102,9 @@ Com isso, sempre que uma regra de divisão mudar (por exemplo, inserir um novo h
 
 
 ## Estrutura
+
+![image](https://github.com/user-attachments/assets/e68e9e47-d321-4c3e-a091-c3d7f69ea4e4)
+
 
 ## Padrão no cenário
 
