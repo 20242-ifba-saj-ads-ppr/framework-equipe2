@@ -1987,6 +1987,139 @@ Com o padrão Prototype, TabletopConcretePrototype implementa um método clone()
 
 @import "framework-tabuleiro/src/prototype/TabletopConcretePrototype.java"
 
+# 16. Template Method 
+
+## Intenção
+
+Definir o esqueleto de um algoritmo em uma operação postergando alguns passos para as subclasses. Template Method permite que subclasses redefinam certos passos de um algoritmo sem mudar a estrutura do mesmo.
+
+## Motivação
+
+Imagine que você precise implementar diferentes variantes de configuração de um tabuleiro de jogo — por exemplo, o tabuleiro clássico da Selva, uma versão simplificada para iniciantes e até uma adaptação para um outro jogo baseado em zonas (água, armadilhas, tocas). Em todas essas versões, existe sempre um fluxo comum:
+
+- Preparar o estado inicial (ex.: limpar listas, notificar início)
+
+- Adicionar as zonas específicas do “lado branco”
+
+- Adicionar as zonas específicas do “lado preto”
+- Finalizar a divisão (ex.: notificar conclusão)
+  
+```plantuml
+@startuml
+title Divisão de Tabuleiro sem Template Method
+
+class SelvaDivider {
+  + divideBoard(board, fw)
+}
+
+class BeginnerDivider {
+  + divideBoard(board, fw)
+}
+
+SelvaDivider .. BeginnerDivider : duplicam lógica
+
+note right of SelvaDivider
+  divideBoard() faz tudo junto:
+   • setInitialDivision  
+   • addWhiteSide  
+   • addBlackSide  
+   • finalizeDivision
+end note
+@enduml
+```
+
+Sem um padrão apropriado, você acabaria duplicando esse fluxo em vários métodos distintos — copiando e colando passo a passo em cada classe de divisão de tabuleiro. Qualquer mudança no processo (por exemplo, inserir uma etapa de validação extra antes de notificar) exigiria editar todos esses métodos, aumentando o risco de inconsistências e bugs.
+
+
+
+Com o Template Method, podemos extrair esse esqueleto de algoritmo para uma classe abstrata:
+
+```plantuml
+@startuml
+title Divisão de Tabuleiro com Template Method
+
+abstract class AbstractBoardDivider {
+  + divideBoard(board, fw)
+  # setInitialDivision(board)
+  # addWhiteSide(board, fw)
+  # addBlackSide(board, fw)
+  # finalizeDivision(board)
+}
+
+class StandardBoardDivider {
+  + addWhiteSide(board, fw)
+  + addBlackSide(board, fw)
+}
+
+AbstractBoardDivider <|-- StandardBoardDivider
+
+note right of AbstractBoardDivider
+O método-template divideBoard():
+ • setInitialDivision(board)
+ • addWhiteSide(board, fw)
+ • addBlackSide(board, fw)
+ • finalizeDivision(board)
+  
+As subclasses apenas implementam 
+addWhiteSide() e addBlackSide(), 
+sem duplicar os passos comuns.
+end note
+@enduml
+
+```
+
+Dessa forma, ao usar o Template Method:
+
+Você garante que o fluxo geral nunca será quebrado, pois divideBoard() é final e controla a ordem das chamadas.
+
+Reduz duplicação, pois as partes comuns são escritas apenas uma vez.
+
+Facilita a extensão: basta criar uma nova subclasse e implementar apenas os métodos abstratos, sem tocar no código de controle.
+
+
+Com isso, sempre que uma regra de divisão mudar (por exemplo, inserir um novo hook antes de finalizeDivision), você altera somente a superclasse, e todas as divisões específicas herdarão a mudança automaticamente — entregando um código mais robusto, legível e de fácil manutenção.
+
+
+## Estrutura
+
+## Padrão no cenário
+
+A lógica de divisão do tabuleiro segue uma estrutura fixa (preparar, dividir metades, finalizar), mas os detalhes de cada passo podem variar de acordo com o tipo de divisão aplicada. Sem o uso do padrão Template Method, a lógica completa estaria duplicada em cada implementação, dificultando reutilização e criando inconsistência entre diferentes versões da mesma operação.
+
+Com o padrão Template Method, a classe AbstractBoardDivider define o fluxo de divisão com o método dividir(), enquanto os métodos específicos (dividirMetade1, dividirMetade2, etc.) são implementados por subclasses como StandardBoardDivider. Isso garante que a sequência de passos seja preservada, permitindo personalização de comportamento sem duplicar estrutura.
+
+## Participantes
+
+| Participante           | Classe / Método                            | Função                                                                                                      |
+|------------------------|---------------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| **AbstractClass**      | `AbstractBoardDivider`                      | Define o método-template `divideBoard()` e declara os passos invariantes (`setInitialDivision()`, hooks, primitivas, `finalizeDivision()`). |
+| **Template Method**    | `AbstractBoardDivider.divideBoard()`        | Esqueleto do algoritmo que chama em ordem os passos definidos pela classe abstrata.                         |
+| **PrimitiveOperation** | `addWhiteSide()`<br>`addBlackSide()`        | Operações abstratas que subclasses devem implementar para fornecer as partes variáveis do algoritmo.       |
+| **HookOperation**      | `setInitialDivision()`<br>`finalizeDivision()` | Métodos com comportamento padrão que podem ser sobrescritos pelas subclasses se necessário.                |
+| **ConcreteClass**      | `StandardBoardDivider`                      | Subclasse que implementa as operações primitivas (`addWhiteSide()`, `addBlackSide()`), sem repetir os passos comuns. |
+
+
+## Código
+
+#### AbstractClass 
+
+@import "framework-tabuleiro/src/templatemethod/AbstractBoardDivider.java"
+
+#### Template Method
+
+@import "framework-tabuleiro/src/templatemethod/AbstractBoardDivider.java"
+
+#### PrimitiveOperation
+
+@import "framework-tabuleiro/src/templatemethod/AbstractBoardDivider.java"
+
+#### HookOperation
+
+@import "framework-tabuleiro/src/templatemethod/AbstractBoardDivider.java"
+
+#### ConcreteClass
+
+@import "framework-tabuleiro/src/templatemethod/StandardBoardDivider.java"
 
 
 # Como Usar o Framework para Construir outros Jogos – Exemplo: Jogo de Xadrez
