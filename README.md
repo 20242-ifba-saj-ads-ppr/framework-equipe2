@@ -2126,6 +2126,48 @@ Com o padrão Template Method, a classe AbstractBoardDivider define o fluxo de d
 
 Este framework foi projetado com base em padrões de projeto para permitir a criação modular e reutilizável de jogos de tabuleiro. A seguir, apresentamos um guia passo a passo para integrar um novo jogo—neste caso, **Xadrez**—ao framework.
 
+
+
+## ✅ Etapas para Implementar um Novo Jogo - Resumido
+
+### 1. Definir o Tabuleiro
+- Estabeleça as dimensões (ex: 8x8).
+- Determine os tipos de célula (ex: casas normais, obstáculos, zonas especiais).
+- Visualize a organização inicial dos elementos no tabuleiro.
+
+### 2. Criar um ConcreteBuilder
+- Implemente uma classe que estenda `TabletopBuilder`.
+- Este builder deve ser capaz de:
+  - Preencher a matriz de células (`buildCells`)
+  - Montar a composição visual do tabuleiro (`buildTiles`)
+  - Posicionar as peças iniciais (`buildPieces`)
+
+### 3. Criar uma Abstract Factory de Peças
+- Declare uma interface que defina os métodos para criar as peças do jogo.
+- Implemente uma classe concreta que crie instâncias das peças com suas posições e estratégias de movimento.
+
+### 4. Implementar Estratégias de Movimento
+- Crie classes que implementam `MovimentoStrategy` para cada tipo de peça.
+- Encapsule a lógica de movimentação dessas peças (ex: movimento em L, linha reta, diagonal, etc.).
+
+### 5. Adicionar Validadores de Regras (opcional)
+- Se houver regras específicas para movimentação (como não atravessar obstáculos), implemente `MoveValidator` em cadeia (`Chain of Responsibility`).
+
+### 6. Controlar o Ciclo de Jogo
+- Use o `GameController` para lidar com:
+  - Comandos do jogador (`move`, `undo`, `replay`)
+  - Controle de turnos (`TurnManager`)
+  - Estados do jogo (`start`, `play`, `end`) com o padrão `State`
+
+### 7. Implementar Observadores (UI / Logs)
+- Se houver necessidade de notificação visual ou de eventos:
+  - Utilize `TabletopObserver` e `TabletopSubject`
+
+### 8. Criar uma Facade Específica
+- Para facilitar o uso, crie uma classe `Facade` com métodos:
+  - `iniciarPartida()`
+  - `moverPeca(...)`
+  - `verificarEstado()`
 ---
 
 ## 1. Implementar o Builder do Tabuleiro
