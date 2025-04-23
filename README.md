@@ -1951,54 +1951,32 @@ No nosso cenário, estamos construindo um tabuleiro que pode ser composto por pe
 ![image](https://github.com/user-attachments/assets/269ee1fc-9666-4cde-826d-66e13563054e)
 
 
-## Participantes:
 
-- **Prototype (TabletopPrototype):**  
-  Define a interface para objetos que podem ser clonados, declarando o método `clonePrototype()`. Essa interface é a base para qualquer objeto que deseje suportar clonagem.
+## Participantes do Padrão Prototype
 
-- **ConcretePrototype (TabletopConcretePrototype):**  
-  Implementa a interface `TabletopPrototype` e armazena internamente um objeto do tipo `TabletopProduct`. Ao invocar o método `clonePrototype()`, é retornada uma nova instância do protótipo (no caso, utilizando uma cópia superficial do produto).
+| Participante         | Classe no Projeto             | Função                                                                                                          |
+|----------------------|-------------------------------|-----------------------------------------------------------------------------------------------------------------|
+| **Prototype**        | `TabletopPrototype`           | Interface que define o contrato para clonagem. Declara o método `clonePrototype()`.                            |
+| **ConcretePrototype**| `TabletopConcretePrototype`   | Implementa `TabletopPrototype`. Armazena e clona uma instância de `TabletopProduct`, retornando uma cópia.     |
+| **Product**          | `TabletopProduct`             | Objeto complexo clonado pelo protótipo. Representa o tabuleiro com células, peças e tiles.                     |
 
-- **Product (TabletopProduct):**  
-  Embora não faça parte direta do padrão Prototype, este objeto complexo é o que está sendo clonado. Ele representa o tabuleiro de jogo com sua configuração e componentes.
+
+## Padrão usado no cénario: 
+
+Em alguns momentos do jogo, é necessário duplicar completamente a estrutura de um tabuleiro (TabletopProduct) — por exemplo, para salvar variações de estado, testar jogadas ou criar tabuleiros com pequenas diferenças. Sem o uso do padrão Prototype, seria preciso reconstruir manualmente o objeto, copiando profundamente todas as suas propriedades, o que é complexo, repetitivo e propenso a erros.
+
+Com o padrão Prototype, TabletopConcretePrototype implementa um método clone() que encapsula a lógica de duplicação completa do tabuleiro. O cliente pode clonar instâncias de forma segura e sem conhecer a estrutura interna do objeto. Isso facilita a criação de cópias consistentes e reaproveitamento de configurações complexas.
 
 ## Código
 
 ### **TabletopPrototype**
 
-```java
-package prototype;
-// Interface para objetos que podem ser clonados
-public interface TabletopPrototype {
-    TabletopPrototype clonePrototype();
-}
-```
+@import "framework-tabuleiro/src/prototype/TabletopPrototype.java"
 
 ### **TabletopConcretePrototype**
 
-```java
-package prototype;
-// Implementação concreta do protótipo
+@import "framework-tabuleiro/src/prototype/TabletopConcretePrototype.java"
 
-import builder.TabletopProduct;
-
-public class TabletopConcretePrototype implements TabletopPrototype {
-    private TabletopProduct product;
-
-    public TabletopConcretePrototype(TabletopProduct product) {
-        this.product = product;
-    }
-
-    @Override
-    public TabletopPrototype clonePrototype() {
-        return new TabletopConcretePrototype(product); // shallow copy
-    }
-
-    public TabletopProduct getProduct() {
-        return product;
-    }
-}
-```
 
 
 # Como Usar o Framework para Construir outros Jogos – Exemplo: Jogo de Xadrez
