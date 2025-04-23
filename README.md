@@ -1261,7 +1261,7 @@ A grande vantagem de aplicar o Front Controller é a maior coesão e a flexibili
 
 @import "framework-tabuleiro/src/facade/GameFacade.java"
 
-# Command Pattern
+# 10. Command Pattern
 
 ## Intenção
 
@@ -1400,8 +1400,124 @@ O padrão Command, ajuda a realizar ações como mover uma peça que são encaps
 @import "framework-tabuleiro/src/controller/GameController.java"
 
 
+# 11. Memento
+
+## Intenção
+
+Sem violar o encapsulamento, capturar e externalizar um estado interno de um objeto, de maneira que o objeto possa ser restaurado para esse estado mais tarde.
+
+## Motivação
+
+Imagine que você esteja desenvolvendo um framework de jogo de tabuleiro onde os jogadores podem mover peças, desfazer jogadas (undo) ou até repetir uma sequência de jogadas (replay).
+
+Sem um mecanismo adequado para armazenar o estado anterior do tabuleiro, você teria dois grandes problemas:
+
+- Desfazer movimentos seria difícil ou impreciso: Para reverter uma jogada, seria necessário manter manualmente diversas variáveis (posição anterior da peça, peça capturada, etc.), o que tornaria o código mais complexo e propenso a erros.
+
+- Não há histórico confiável de estados: O tabuleiro mudaria a cada jogada, e qualquer tentativa de registrar o estado anterior envolveria duplicação de lógica ou cópias manuais de atributos.
+
+- Alto acoplagem: O Command teria que lidar com lógica de restauração diretamente, acoplando regras de jogo com persistência de estado, dificultando manutenção e testes.
+
+```plantuml
+@startuml
+title Sem o padrão Memento
+
+interface Command {
+    + execute(): boolean
+}
+
+class MoverPecaCommand {
+    - estadoAnterior: TabletopProduct
+    - peca: Peca
+    - board: TabletopProduct
+    + execute(): boolean
+    + restore(): void
+}
+
+Command <|.. MoverPecaCommand
+
+MoverPecaCommand --> TabletopProduct : manipula e salva estado
+MoverPecaCommand --> Peca : move
+
+note right of MoverPecaCommand
+Estado é salvo dentro da própria classe,
+gerando acoplamento e complexidade.
+end note
+@enduml
+```
+
+Com a introdução do padrão Memento, cada comando (MoverPecaCommand, por exemplo) captura automaticamente o estado do tabuleiro antes da execução e o armazena de forma encapsulada:
+
+```plantuml
+@startuml
+title Com o padrão Memento - framework Selva
+
+interface Command {
+    + execute(): boolean
+    + saveMemento(): BoardMemento
+    + restore(m: BoardMemento): void
+}
+
+class MoverPecaCommand {
+    - peca: Peca
+    - board: TabletopProduct
+    - origemX, origemY, destinoX, destinoY: int
+    - subject: TabletopSubject
+    + execute(): boolean
+    + saveMemento(): BoardMemento
+    + restore(m: BoardMemento): void
+}
+
+class BoardMemento {
+    - snapshot: TabletopProduct
+    + getState(): TabletopProduct
+}
+
+Command <|.. MoverPecaCommand
+MoverPecaCommand --> Peca : move
+MoverPecaCommand --> BoardMemento : cria/usa
+BoardMemento --> TabletopProduct : encapsula estado
+
+note right of BoardMemento
+Encapsula o estado do tabuleiro antes da ação.
+Permite desfazer ou restaurar sem acoplamento.
+end note
+
+@enduml
+
+```
+
+## Estrutura do GOF
+
+## Padrão aplicado no cénario: 
+
+Durante uma partida, pode ser necessário salvar o estado atual do tabuleiro para restaurá-lo depois (por exemplo, para implementar “desfazer” ou checkpoints). Sem o padrão Memento, o cliente teria que acessar diretamente os atributos internos do tabuleiro e copiá-los manualmente, violando o encapsulamento e aumentando o risco de inconsistência.
+
+Com o padrão Memento, a classe BoardMemento encapsula o estado do TabletopProduct sem expor sua estrutura interna. O cliente pode criar um snapshot do estado e restaurá-lo posteriormente, mantendo a integridade do objeto original. Isso permite salvar e restaurar estados de forma segura, reutilizável e desacoplada
+
+## Participantes
+
+| Participante         | Classe no Projeto           | Função                                                                                          |
+|----------------------|-----------------------------|--------------------------------------------------------------------------------------------------|
+| **Originator**       | `TabletopProduct`           | Objeto que possui o estado interno que será salvo e restaurado. Oferece métodos para gerar e restaurar mementos. |
+| **Memento**          | `BoardMemento`              | Armazena o estado interno do `TabletopProduct` de forma segura, sem expor sua estrutura.         |
+| **Caretaker**        | `CommandInvoker`            | Responsável por armazenar e recuperar mementos sem modificá-los ou interpretá-los.               |
+| **Client**           | `MoverPecaCommand`          | Gera o memento antes de executar um comando e solicita restauração se necessário (ex: undo).     |
 
 
+## Código
+
+#### Originator (TabletopProduct)
+@import "framework-tabuleiro/src/builder/TabletopProduct.java"
+
+#### Memento – BoardMemento
+@import "framework-tabuleiro/src/memento/BoardMemento.java"
+
+#### Caretaker – CommandInvoker
+@import "framework-tabuleiro/src/command/CommandInvoker.java"
+
+#### Client – MoverPecaCommand
+@import "framework-tabuleiro/src/command/MoverPecaCommand.java"
 
 # Prototype 
 
