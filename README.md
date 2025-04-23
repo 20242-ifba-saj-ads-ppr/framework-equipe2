@@ -1763,7 +1763,132 @@ Com o padrão Singleton, essas classes controlam sua própria instância por mei
 @import "framework-tabuleiro/src/facade/GameFacade.java"
 @import "framework-tabuleiro/src/context/Peca.java"
 
-# Prototype 
+# 14. Facade
+
+## Intenção
+
+Fornecer uma interface unificada para um conjunto de interfaces em um subsistema. Façade define uma interface de nível mais alto que torna o subsistema mais fácil de ser usado
+
+## Motivação
+
+Imagine um cenário onde estamos  desenvolvendo o jogo de tabuleiro, nesse caso é preciso montar e iniciar o jogo da Selva diretamente a partir de diversas classes: TabletopBuilder, TabletopDirector, SelvaCellCreator, SelvaPieceFactory, TabletopFlyweightConcreteCreator, além de lidar manualmente com o padrão Observer para notificar alterações no estado do jogo.
+
+A complexidade disso se torna evidente: o cliente (por exemplo, o GameController ou a classe Main) precisa conhecer detalhes de implementação de múltiplos padrões de projeto e orquestrar manualmente cada passo da construção e inicialização do tabuleiro. Isso gera um alto acoplamento, código repetitivo e difícil de manter.
+
+```plantuml
+@startuml
+title Sem o padrão Facade - Cliente exposto a múltiplas dependências
+
+
+class TabletopBuilder {
+  +withDimensions()
+  +buildCells()
+  +buildTiles()
+  +buildPieces()
+  +getResult()
+}
+class TabletopDirector {
+  +construct()
+}
+class SelvaCellCreator
+class SelvaPieceFactoryImpl
+class TabletopFlyweightConcreteCreator
+class TabletopProduct
+
+Cliente --> TabletopBuilder : configura dimensões
+Cliente --> SelvaCellCreator : cria células
+Cliente --> TabletopFlyweightConcreteCreator : cria tiles
+Cliente --> SelvaPieceFactoryImpl : cria peças
+Cliente --> TabletopDirector : coordena montagem
+TabletopDirector --> TabletopBuilder
+TabletopBuilder --> TabletopProduct : getResult()
+
+note right of Cliente
+O cliente precisa orquestrar todas
+as dependências do sistema manualmente.
+Isso aumenta o acoplamento e a complexidade.
+end note
+@enduml
+```
+
+
+Com o padrão Facade, conseguimos resolver essa dificuldade de forma simples e organizada:
+Criamos a classe GameFacade, que encapsula toda essa complexidade de inicialização e orquestração de componentes internos do framework. Com isso, o cliente precisa apenas chamar métodos como setupSelva() ou executeMove() sem se preocupar com os detalhes internos da construção do tabuleiro ou do sistema de eventos.
+
+A GameFacade atua como uma interface unificada e de alto nível, facilitando a interação com o sistema e tornando o código mais limpo, legível e de fácil manutenção. Além disso, ela facilita o uso combinado de vários padrões (como Builder, Abstract Factory, Observer, Command etc.) sem expor sua complexidade ao usuário final.
+
+
+```plantuml
+@startuml
+title Com o padrão Facade - Cliente interage com GameFacade
+
+
+class GameFacade {
+  +setupSelva()
+  +divideBoard()
+  +executeMove()
+  +getBoard()
+}
+
+class TabletopBuilder
+class TabletopDirector
+class TabletopProduct
+class SelvaCellCreator
+class TabletopFlyweightConcreteCreator
+class SelvaPieceFactoryImpl
+
+Cliente --> GameFacade : chama setupSelva()
+GameFacade --> TabletopBuilder
+GameFacade --> TabletopDirector
+GameFacade --> SelvaCellCreator
+GameFacade --> TabletopFlyweightConcreteCreator
+GameFacade --> SelvaPieceFactoryImpl
+GameFacade --> TabletopProduct : getBoard()
+
+note right of GameFacade
+Centraliza toda a lógica e dependências
+para simplificar o uso pelo cliente.
+end note
+
+@enduml
+```
+## Estrutura do Padrão - GOF
+
+## Padrão utilizado no cenário
+
+O sistema de jogo envolve múltiplos subsistemas interdependentes: construção do tabuleiro com Builder, execução de comandos, controle de turnos, aplicação de estratégias de movimento, validações e notificações via Observer. Sem um ponto de entrada unificado, o cliente teria que instanciar e coordenar todos esses módulos manualmente, o que geraria um código altamente acoplado e difícil de manter.
+
+Com o padrão Facade, a classe GameFacade encapsula toda a lógica de inicialização e interação entre os módulos internos. Ela fornece métodos simples como construirTabuleiro(), moverPeca(), dividirTabuleiroComTemplate() e notificarMudanca(), escondendo a complexidade da composição do sistema. Isso simplifica o uso da aplicação e facilita a integração com interfaces externas ou clientes de alto nível.
+
+## Participantes
+
+## Código
+
+#### Facade - GameFacade
+@import "framework-tabuleiro/src/facade/GameFacade.java"
+
+#### Subsistemas - TabletopBuilder, TabletopDirector, SelvaPieceFactoryImpl, SelvaCellCreator, TabletopFlyweightConcreteCreator,CommandInvoker
+
+@import "framework-tabuleiro/src/builder/TabletopBuilder.java"
+
+@import "framework-tabuleiro/src/builder/TabletopDirector.java"
+
+@import "framework-tabuleiro/src/abstractfactory/SelvaPieceFactoryImpl.java"
+
+@import "framework-tabuleiro/src/factorymethod/SelvaCellCreator.java"
+
+@import "framework-tabuleiro/src/flyweight/TabletopFlyweightConcreteCreator.java"
+
+@import "framework-tabuleiro/src/command/CommandInvoker.java"
+
+#### Cliente (GameController, Main)
+
+@import "framework-tabuleiro/src/controller/GameController.java"
+@import "framework-tabuleiro/src/Main.java"
+
+
+
+# 15. Prototype 
 
 ## Intenção
 
