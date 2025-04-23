@@ -29,7 +29,6 @@ public class CommandLogManager {
         try (BufferedReader reader = new BufferedReader(new FileReader("command.log"))) {
             String linha;
             while ((linha = reader.readLine()) != null) {
-                // Formato agora:
                 // MoverPecaCommand;nomePeca;side;origemX;origemY;destinoX;destinoY
                 String[] parts = linha.split(";");
                 if (parts.length == 7 && "MoverPecaCommand".equals(parts[0])) {
