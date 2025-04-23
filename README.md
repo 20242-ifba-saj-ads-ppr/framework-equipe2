@@ -590,8 +590,262 @@ Cada tipo de peça no jogo possui regras de movimentação específicas. Sem o u
 @import "framework-tabuleiro/src/builder/TabletopBuilder.java"
 
 
+# 5. Chain Of Responsability 
 
-## 2. Composite
+## Intenção
+Evitar o acoplamento do remetente de uma solicitação ao seu receptor, ao dar a mais de um objeto a oportunidade de tratar a solicitação. Encadear os objetos receptores, passando a solicitação ao longo da cadeia até que um objeto a trate.
+
+## Motivação
+Em um Framework, a movimentação de uma peça pode depender de múltiplas validações encadeadas: verificar se está dentro dos limites do tabuleiro, se o destino é uma célula válida, se há uma peça ali, se é permitido capturar, se é possível entrar em uma armadilha ou toca, entre outros.
+
+**Sem o padrão Chain of Responsibility:**
+- Toda essa lógica de validação estaria dentro da própria peça ou da estratégia de movimento, resultando em códigos monolíticos e com alta complexidade condicional (if/else, switch).
+
+- Seria difícil adicionar ou remover novas regras de forma flexível.
+
+- Regras ficariam acopladas e difíceis de testar isoladamente.
+
+
+```plantuml 
+@startuml
+title Sem Chain of Responsibility - Validação acoplada na estratégia
+
+class LeaoMovimentoStrategy {
+  + mover(peca, board, ox, oy, dx, dy): boolean
+  - validarLimites(...)
+  - validarEntrada(...)
+  - validarCaptura(...)
+}
+
+class TabletopProduct
+class Peca
+
+LeaoMovimentoStrategy --> TabletopProduct : acessa
+LeaoMovimentoStrategy --> Peca : valida lado, nome, posição
+
+note right of LeaoMovimentoStrategy
+Todas as regras de validação
+(está dentro do tabuleiro, pode capturar,
+pode entrar na célula, etc.)
+são implementadas dentro da própria
+classe de movimentação.
+end note
+@enduml
+```
+
+#### Com o uso de Chain of Responsibility:
+
+- Cada validação é encapsulada em um validador independente(ex: DentroDosLimitesValidato,PodeCapturarValidatorPodeEntrarNaTocaValidator, etc.).
+
+- Os validadores são encadeados dinamicamente em uma corrente de responsabilidades.
+
+- A ordem e a composição da cadeia podem ser alteradas ou estendidas sem modificar o código existente.
+
+- Promove abertura para extensão e fechamento para modificação (princípio do Open/Closed).
+
+```plantuml 
+@startuml
+title Chain of Responsibility - Validação de Movimento
+
+abstract class MoveValidator {
+  - next: MoveValidator
+  + validate(peca, board, ox, oy, dx, dy): boolean
+  # check(peca, board, ox, oy, dx, dy): boolean
+}
+
+class BoundsValidator {
+  + check(...): boolean
+}
+class CellEntryValidator {
+  + check(...): boolean
+}
+class CaptureValidator {
+  + check(...): boolean
+}
+
+MoveValidator <|-- BoundsValidator
+MoveValidator <|-- CellEntryValidator
+MoveValidator <|-- CaptureValidator
+
+BoundsValidator --> MoveValidator : next
+CellEntryValidator --> MoveValidator : next
+CaptureValidator --> MoveValidator : next
+
+class LeaoMovimentoStrategy {
+  + mover(...): boolean
+}
+
+LeaoMovimentoStrategy --> MoveValidator : usa cadeia
+
+note right of LeaoMovimentoStrategy
+Instancia a cadeia de validadores:
+Bounds -> CellEntry -> Capture
+e aplica antes de mover.
+end note
+@enduml
+```
+
+## Estrutura do Padrão (GOF - Papéis)
+
+## Padrão aplicado no cénario
+
+Durante a validação de movimentos no jogo, múltiplas regras precisam ser aplicadas em sequência: se a posição está dentro dos limites, se a célula de destino é válida, se a captura é permitida, etc. Sem o uso de um padrão, todas essas validações estariam dentro de um único método grande e acoplado, provavelmente com uma sequência de ifs que tornaria o código difícil de ler, testar ou modificar.
+
+Com o padrão Chain of Responsibility, essas verificações são transformadas em validadores independentes, como BoundsValidator, CellEntryValidator e CaptureValidator. Cada um encapsula uma regra isolada e pode ser encadeado através de linkWith(), permitindo uma composição flexível da cadeia de validação. Isso facilita a extensão, a reutilização de regras e a manutenção do código, além de separar claramente as responsabilidades.
+
+
+### Participantes
+
+| Participante           | Classe no Projeto               | Função                                                                                                      |
+|------------------------|----------------------------------|-------------------------------------------------------------------------------------------------------------|
+| **Handler (abstract)** | `MoveValidator`                 | Declara a interface para validação e mantém uma referência para o próximo validador na cadeia (`next`).    |
+| **ConcreteHandler**    | `BoundsValidator`               | Verifica se o destino está dentro dos limites do tabuleiro.                                                |
+| **ConcreteHandler**    | `CellEntryValidator`            | Verifica se a peça pode entrar na célula de destino (ex.: evita entrar na própria toca).                   |
+| **ConcreteHandler**    | `CaptureValidator`              | Verifica se a peça pode capturar a peça inimiga (ex.: não permitir captura de aliados).                    |
+| **Client**             | `LeaoMovimentoStrategy` (e outros `*MovimentoStrategy`) | Cria e encadeia os validadores e os utiliza dentro do método `mover()` para validar a jogada.              |
+
+
+
+## Código
+
+#### Handler - (MoveValidator)
+@import "framework-tabuleiro/src/responsability/MoveValidator.java"
+
+
+#### ConcreteHandler (BoundsValidator,CaptureValidator,CellEntryValidator	) 
+
+@import "framework-tabuleiro/src/responsability/CaptureValidator.java"
+
+@import "framework-tabuleiro/src/responsability/CellEntryValidator.java"
+
+@import "framework-tabuleiro/src/responsability/BoundsValidator.java"
+
+#### Context (Peca)
+@import "framework-tabuleiro/src/context/Peca.java"
+
+### Client (ConcreteStrategy)
+
+
+# 6. Flyweight
+
+## Intenção
+
+Usar compartilhamento para suportar eficientemente grandes quantidades de objetos de granularidade fina.
+
+## Motivação
+No desenvolvimento de jogos de tabuleiro, o tabuleiro é composto por inúmeros tiles que podem apresentar características idênticas. Por exemplo, várias casas do tabuleiro podem ter o mesmo tipo (água, armadilha, toca, etc.).
+
+Sem o Flyweight, cada tile seria instanciado individualmente, consumindo mais memória e tornando o gerenciamento desses objetos mais complexo.
+
+
+```plantuml
+@startuml
+title Cenário sem Flyweight - Instanciação Individual de Tiles
+
+class Cliente {
+  + main()
+}
+
+class Tabuleiro {
+  - tiles: List<Tile>
+  + adicionarTile(tile: Tile): void
+  + removerTile(tile: Tile): void
+  + obterTiles(): List<Tile>
+}
+
+class Tile {
+  - posicaoX: int
+  - posicaoY: int
+  - tipo: String
+  + Tile(posicaoX: int, posicaoY: int, tipo: String)
+  + desenhar(): void
+}
+
+Cliente --> Tabuleiro
+Tabuleiro --> "1..*" Tile
+
+note right of Tabuleiro : Cada Tile é instanciado\nindividualmente, consumindo mais memória\n e aumentando a complexidade do gerenciamento.
+
+@enduml
+```
+
+Com o Flyweight, podemos compartilhar instâncias de tiles com estados idênticos, fazendo com que o código cliente não precise criar novas instâncias para cada tile repetido. Assim, o sistema se torna mais leve e eficiente.
+
+
+```plantuml
+@startuml
+title Flyweight - Framework de Tabuleiro
+
+abstract class TabletopFlyweightFactory {
+    - flyweights: Map<String, TabletopFlyweightProduct>
+    + getFlyweight(key: String): TabletopFlyweightProduct
+    + listFlyweights(): String[]
+}
+
+class TabletopFlyweightConcreteCreator {
+    + getFlyweight(key: String): TabletopFlyweightProduct
+    + listFlyweights(): String[]
+}
+
+abstract class TabletopFlyweightProduct {
+    - name: String
+    + operation(position: String): String
+}
+
+class TabletopFlyweightConcreteProduct {
+    + operation(position: String): String
+}
+
+TabletopFlyweightFactory <|-- TabletopFlyweightConcreteCreator
+TabletopFlyweightProduct <|-- TabletopFlyweightConcreteProduct
+
+TabletopFlyweightConcreteCreator --> TabletopFlyweightConcreteProduct : cria e compartilha
+TabletopFlyweightFactory --> TabletopFlyweightProduct : gerencia
+
+@enduml
+
+
+```
+
+## Estrutura do padrão (GOF - papeis)
+
+![image](https://github.com/user-attachments/assets/cf013925-de8d-4fd0-9daf-9dae96a4c64b)
+
+
+## Padrão aplicado no cenário
+
+No tabuleiro, várias células compartilham os mesmos atributos visuais ou comportamentais. Sem o uso do padrão Flyweight, cada célula seria instanciada individualmente, mesmo que idêntica a outras, resultando em desperdício de memória e processamento, especialmente em jogos com grandes áreas de tabuleiro.
+
+
+Com o padrão Flyweight, objetos como TabletopFlyweightConcreteProduct são reutilizados por meio da TabletopFlyweightFactory, que mantém um cache interno. Quando um componente visual ou estrutural é necessário, a fábrica retorna uma instância compartilhada, evitando recriação desnecessária. Isso otimiza o desempenho e reduz o consumo de memória ao manter apenas uma instância de cada tipo.
+
+
+  
+## Participantes 
+| Participante             | Classe no Projeto                      | Função                                                                                                                                                          |
+|--------------------------|----------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Flyweight**            | `TabletopFlyweightProduct`             | Define a interface para os objetos compartilhados (ex: tiles do tabuleiro). Encapsula o estado **intrínseco** (ex: nome do tile) e declara o método `operation()`. |
+| **Concrete Flyweight**   | `TabletopFlyweightConcreteProduct`     | Implementa a interface `TabletopFlyweightProduct`. Representa um objeto compartilhado concreto (ex: grama, água, armadilha) e define seu comportamento.          |
+| **Flyweight Factory**    | `TabletopFlyweightConcreteCreator`     | Garante o compartilhamento de instâncias `Flyweight`. Cria novos objetos somente se ainda não existirem na memória (uso de cache via `Map`).                   |
+
+
+
+## Código 
+
+#### **Concrete Flyweight (TabletopFlyweightConcreteCreator)**
+@import "framework-tabuleiro/src/flyweight/TabletopFlyweightConcreteCreator.java"
+
+#### **Flyweight Factory (TabletopFlyweightFactory)**
+
+@import "framework-tabuleiro/src/flyweight/TabletopFlyweightFactory.java"
+
+#### **Flyweight (TabletopFlyweightProduct)**
+
+
+@import "framework-tabuleiro/src/flyweight/TabletopFlyweightProduct.java"
+
+
+# 7. Composite
 
 ## Intenção
 
@@ -693,8 +947,6 @@ Com o padrão Composite, criamos a interface TabletopComponent, implementada por
 
 ## Participantes 
 
-### Padrão Composite
-
 | Participante       | Classe no Projeto        | Função                                                                 |
 |--------------------|--------------------------|------------------------------------------------------------------------|
 | **Component**      | `TabletopComponent`      | Interface comum para objetos folha e compostos. Define o método `operation()`. |
@@ -719,199 +971,297 @@ Com o padrão Composite, criamos a interface TabletopComponent, implementada por
 
 @import "framework-tabuleiro/src/composite/composite/TabletopLeaf.java"
 
-
-
-
-# Flyweight
+# 8. State Pattern
 
 ## Intenção
 
-Usar compartilhamento para suportar eficientemente grandes quantidades de objetos de granularidade fina.
-(GOF)
+Permite a um objeto alterar seu comportamento quando o seu estado interno muda. O
+objeto parecerá ter mudado sua classe.
 
 ## Motivação
-No desenvolvimento de jogos de tabuleiro, como o jogo Selva, o tabuleiro é composto por inúmeros tiles que podem apresentar características idênticas. Por exemplo, várias casas do tabuleiro podem ter o mesmo tipo (água, armadilha, toca, etc.).
 
-Sem o Flyweight, cada tile seria instanciado individualmente, consumindo mais memória e tornando o gerenciamento desses objetos mais complexo.
+Suponha que tivéssemos que controlar diretamente os diferentes comportamentos de uma peça (Peca) dentro de um único método, usando estruturas condicionais:
 
+Problemas desta abordagem:
 
-```plantuml
-@startuml
-title Cenário sem Flyweight - Instanciação Individual de Tiles
+- Código inchado: a cada novo estado (e.g. “Atordoada”, “Empoderada”), precisamos inserir mais if/else no mesmo método.
 
-class Cliente {
-  + main()
-}
+- Baixa coesão: a classe Peca acumula lógica de todos os comportamentos de estado, além de suas responsabilidades básicas.
 
-class Tabuleiro {
-  - tiles: List<Tile>
-  + adicionarTile(tile: Tile): void
-  + removerTile(tile: Tile): void
-  + obterTiles(): List<Tile>
-}
-
-class Tile {
-  - posicaoX: int
-  - posicaoY: int
-  - tipo: String
-  + Tile(posicaoX: int, posicaoY: int, tipo: String)
-  + desenhar(): void
-}
-
-Cliente --> Tabuleiro
-Tabuleiro --> "1..*" Tile
-
-note right of Tabuleiro : Cada Tile é instanciado\nindividualmente, consumindo mais memória\n e aumentando a complexidade do gerenciamento.
-
-@enduml
-```
-
-Com o Flyweight, podemos compartilhar instâncias de tiles com estados idênticos, fazendo com que o código cliente não precise criar novas instâncias para cada tile repetido. Assim, o sistema se torna mais leve e eficiente.
+- Difícil de estender: mudanças em uma regra de estado podem quebrar outros trechos do mover(), e a Peca torna-se um “deus objeto”.
 
 
 ```plantuml
 @startuml
-title Flyweight Pattern for Tabletop Tiles
+title Comparativo: Sem vs Com o Padrão State (Peca)
 
-' Abstract Flyweight
-abstract class TabletopFlyweightProduct {
-  - name: String
-  + TabletopFlyweightProduct(name: String)
-  + operation(position: String): String
+skinparam linetype ortho
+
+package "Sem State" {
+  class Peca {
+    +mover(board, ox, oy, dx, dy)
+  }
+
+  note right of Peca
+    - if (estado == BLOQUEADA) {...}
+    - else if (estado == NORMAL) {...}
+    - else if (estado == ATORDOADA) {...}
+    - ...
+    ➤ Acoplamento alto, difícil de manter.
+  end note
+}
+@enduml
+```
+
+Com o State conseguimos resolver a gestão de comportamentos de peça de forma muito mais modular e flexível. Antes, toda a lógica de “se estiver bloqueada faça X, se estiver normal faça Y, se…”, ficava concentrada num único método mover() de Peca, gerando um emaranhado de if/else difícil de entender e manter.
+
+Com o State Pattern:
+
+- Isolamos cada comportamento de movimento em sua própria classe (NormalState, BloqueadaState, etc.), cada uma implementando apenas o que lhe cabe.
+
+- Eliminamos os condicionais na classe Peca: ela apenas delega ao seu state, sem conhecer detalhes de cada caso.
+
+- Facilitamos a adição de novos estados (por exemplo, AtordoadaState ou EmpoderadaState) sem tocar em código existente, respeitando o princípio Open/Closed.
+
+- Aumentamos a coesão e reduzimos o acoplamento, pois Peca lida só com o contexto (posicionamento, notificação), e os estados cuidam do “se pode mover ou não” e do “como mover”.
+
+```plantuml
+@startuml
+package "Com State" {
+  interface PecaState {
+    +mover(peca, board, ox, oy, dx, dy)
+  }
+
+  class NormalState
+  class BloqueadaState
+  class AtordoadaState
+
+  class Peca {
+    - estado: PecaState
+    +setState(PecaState)
+    +mover(board, ox, oy, dx, dy)
+  }
+
+  Peca --> PecaState : delega
+  PecaState <|-- NormalState
+  PecaState <|-- BloqueadaState
+  PecaState <|-- AtordoadaState
+
+  note right of Peca
+    ➤ Delegação para objetos de estado
+    ➤ Cada comportamento isolado em sua própria classe
+    ➤ Fácil de extender e manter
+  end note
+}
+@enduml
+```
+
+## Padrão aplicado no cenário:
+
+O comportamento de peças e do jogo como um todo varia de acordo com seu estado: uma peça pode estar bloqueada ou normal, e o jogo pode estar iniciado, em progresso ou encerrado. Essas variações seriam controladas com verificações condicionais dispersas (if, switch), espalhadas por múltiplos pontos do código, dificultando a manutenção e adição de novos estados.
+
+Com o State, estados como NormalState, BloqueadaState, InProgressState ou EndedState encapsulam comportamentos específicos e podem ser trocados dinamicamente. A interface (PecaState, GameState) garante que o cliente interaja com qualquer estado de forma uniforme, promovendo extensibilidade e eliminando lógicas condicionais complexas.
+
+## Estrutura
+
+## Participantes
+
+### State Pattern – Ciclo de Vida do Jogo
+
+| Participante       | Classe no Projeto        | Função                                                                                                 |
+|--------------------|--------------------------|--------------------------------------------------------------------------------------------------------|
+| **State**          | `GameState`              | Interface que define os métodos `start()`, `play()` e `end()` representando os estados do jogo.        |
+| **ConcreteState**  | `NotStartedState`, `InProgressState`, `EndedState` | Implementam os comportamentos específicos para cada fase do jogo.                                     |
+| **Context**        | `GameController`         | Mantém uma referência para o estado atual (`GameState`) e delega as chamadas aos objetos de estado.   |
+
+---
+
+### State Pattern – Estado das Peças (movimentação)
+
+| Participante       | Classe no Projeto        | Função                                                                                                 |
+|--------------------|--------------------------|--------------------------------------------------------------------------------------------------------|
+| **State**          | `PecaState`              | Interface que define o comportamento de movimento de uma peça com base em seu estado atual.            |
+| **ConcreteState**  | `NormalState`, `BloqueadaState` | Representam estados específicos da peça: ativa ou bloqueada para movimentação.                        |
+| **Context**        | `Peca`                   | A peça mantém uma referência ao seu estado atual (`PecaState`) e delega o método `mover()` a ele.     |
+
+
+## Código
+
+#### State (GameState, PecaState)
+
+@import "framework-tabuleiro/src/state/GameState.java"
+
+@import "framework-tabuleiro/src/state/PecaState.java"
+
+
+#### ConcreteState (NormalState,BloqueadaState, NotStartedState, InProgressState, EndedState)
+
+@import "framework-tabuleiro/src/state/NormalState.java"
+
+@import "framework-tabuleiro/src/state/BloqueadaState.java"
+
+@import "framework-tabuleiro/src/state/NotStartedState.java"
+
+@import "framework-tabuleiro/src/state/EndedState.java"
+
+#### Context (Peca, GameController)
+
+@import "framework-tabuleiro/src/context/Peca.java"
+
+# 9. FrontController 
+
+## Intenção
+
+Centralizar o controle das requisições em um único ponto de entrada para a aplicação.
+
+## Motivação
+
+Antes de aplicar o padrão, cada comando do usuário era tratado de forma espalhada pelo código:
+
+- A lógica de iniciar o jogo (start) estava em um Main.java.
+
+- O comando move era disparado manualmente via GameFacade.
+
+- O undo e o replay só funcionavam se chamados dentro de métodos específicos.
+
+- Toda a lógica de entrada e validação estava distribuída entre várias classes, como Main, GameFacade e TurnManager.
+
+```plantuml
+
+@startuml
+title Cenário Sem Front Controller - Framework de Jogo de  Tabuleiro
+
+
+entity "Main" {
+    + run()
 }
 
-' Abstract Flyweight Creator
-abstract class TabletopFlyweightCreator {
-  - flyweights: Map<String, TabletopFlyweightProduct>
-  + getFlyweight(key: String): TabletopFlyweightProduct
-  + listFlyweights(): String[]
+entity "GameFacade" {
+    + executeMove()
+    + startGame()
+    + endGame()
 }
 
-' Concrete Flyweight
-class TabletopFlyweightConcreteProduct {
-  + TabletopFlyweightConcreteProduct(name: String)
-  + operation(position: String): String
+entity "TurnManager" {
+    + getCurrentSide()
+    + switchTurn()
 }
 
-' Concrete Flyweight Creator (Factory)
-class TabletopFlyweightConcreteCreator {
-  + TabletopFlyweightConcreteCreator()
-  + getFlyweight(key: String): TabletopFlyweightProduct
-  + listFlyweights(): String[]
+entity "TabletopProduct" {
+    + printBoard()
+    + movePiece()
 }
 
-TabletopFlyweightConcreteProduct ..|> TabletopFlyweightProduct
-TabletopFlyweightConcreteCreator ..|> TabletopFlyweightCreator
+Jogador --> Main : Interage com
+Main --> GameFacade : Chama comandos (start, move, end)
+Main --> TurnManager : Verifica turnos
+GameFacade --> TabletopProduct : Atualiza e imprime tabuleiro
+TurnManager --> GameFacade : Controle de turno
+TabletopProduct --> GameFacade : Executa movimentos e imprime tabuleiro
+
+note right of Main
+Aqui, a lógica de controle do jogo e de verificação de turnos está dispersa nas classes: 
+Main, GameFacade, e TurnManager.
+Cada um tem seu próprio papel, mas não há um ponto central para coordenar.
+end note
+@enduml
+```
+
+Isso causava os seguintes problemas:
+
+- Duplicação de lógica para verificação de turno, fim de jogo, e atualização de estado.
+  
+- Baixa coesão: a lógica do ciclo de vida do jogo estava misturada com a lógica de tabuleiro e comandos.
+
+- Dificuldade de escalar: adicionar novos comandos ou alterar o fluxo exigia mudanças em várias partes do sistema.
+
+Como ele resolve o problema:
+- Centraliza toda a entrada do usuário no método run() usando o método dispatch(String line).
+- Controla o ciclo de vida do jogo com GameState (NotStartedState, InProgressState, EndedState).
+- Invoca os comandos apropriados da GameFacade como um mediador.
+- Encapsula validação de turno, fim de jogo e impressões do tabuleiro em um só lugar.
+- Permite extensões fáceis: para adicionar novos comandos (ex: save, load, help) basta adicionar um novo caso no dispatch().
+
+
+
+```plantuml
+@startuml
+title Front Controller - Jogo Selva
+
+class GameController {
+    +run()
+    +dispatch(String)
+    +printBoard()
+}
+
+class GameState <<interface>>
+class NotStartedState
+class InProgressState
+class EndedState
+
+class GameFacade
+class TabletopProduct
+
+Jogador --> GameController : Comandos (start, move, undo, etc.)
+GameController --> GameState : delega (start(), play(), end())
+GameState <|-- NotStartedState
+GameState <|-- InProgressState
+GameState <|-- EndedState
+
+GameController --> GameFacade : setupSelva(), executeMove(), undo(), replay()
+GameFacade --> TabletopProduct : lógica do tabuleiro
+
+GameController --> GameController : dispatch()
+GameController --> GameController : printBoard()
 
 @enduml
 
 ```
 
-## Estrutura do padrão (GOF - papeis)
+## Padrão no cénario
+No nosso framework, aplicamos o padrão Front Controller para resolver um problema de dispersão e acoplamento excessivo entre as classes responsáveis pelo controle do fluxo de jogo. Antes da aplicação do padrão, o código estava desorganizado, com a leitura de comandos, validação de estado e chamada de métodos espalhados por várias classes, como o GameFacade, TurnManager e o próprio Main. Isso causava baixa coesão, pois cada classe estava fazendo mais do que sua responsabilidade principal, como gerenciar o fluxo de comandos ou manipular o estado do jogo. Além disso, o acoplamento era alto, já que diferentes partes do sistema precisavam interagir diretamente entre si para realizar tarefas simples, como mudar o turno ou processar movimentos.
 
-![image](https://github.com/user-attachments/assets/cf013925-de8d-4fd0-9daf-9dae96a4c64b)
+Com a introdução do Front Controller, centralizamos o controle de todos os comandos do jogo no GameController, que se tornou o ponto único de entrada para as requisições do usuário. Este controlador lê os comandos de texto, valida e os direciona para os métodos apropriados, como iniciar o jogo, movimentar peças ou verificar vitórias. Ele também integra o uso do State Pattern, delegando a lógica de mudança de estado do jogo para objetos de estado dedicados, como NotStartedState, InProgressState e EndedState. Esse design permite que cada fase do jogo (início, progresso e fim) seja tratada de forma independente e bem organizada, com a execução centralizada no GameController.
+
+A grande vantagem de aplicar o Front Controller é a maior coesão e a flexibilidade que ele proporciona ao sistema. Agora, o fluxo de jogo é facilmente controlado e estendido, sem a necessidade de mudanças complexas em várias classes. A introdução de novos comandos, como save ou load, se torna uma tarefa simples de implementar, bastando adicionar um novo case no método de despacho de comandos (dispatch()) do GameController. Isso reduz drasticamente o acoplamento entre as classes e facilita a manutenção e o entendimento do código. Em resumo, o Front Controller ajuda a organizar o fluxo de controle, mantendo o código limpo, modular e mais fácil de escalar.
+
+## Estrutura
+
+## Participantes
+| Participante            | Classe no Projeto                          | Função                                                                                           |
+|-------------------------|--------------------------------------------|--------------------------------------------------------------------------------------------------|
+| **Front Controller**    | `GameController`                           | Classe principal que recebe os comandos do usuário e os direciona corretamente.                 |
+| **Dispatcher**          | `dispatch(String commandLine)`             | Analisa o comando digitado e invoca a ação apropriada (`start`, `move`, `undo`, `replay`, etc). |
+| **Handler / Controller**| `GameState` e subclasses (`NotStartedState`, `InProgressState`, `EndedState`) | Encapsulam os comportamentos específicos de cada estado do jogo.                                |
+| **View**                | `printBoard()`                             | Apresenta o estado atual do tabuleiro no console para o jogador.                                |
+| **Model**               | `GameFacade`, `TabletopProduct`, etc.      | Representam os dados do jogo e encapsulam a lógica de negócio.                                  |
+
+## Código
+#### Front Controller (GameController)
+
+@import "framework-tabuleiro/src/controller/GameController.java"
+
+#### Dispatch (GameController)
+
+@import "framework-tabuleiro/src/controller/GameController.java"
+
+#### Handler / Controller (GameState,InProgressState,NotStarted)
+
+@import "framework-tabuleiro/src/state/GameState.java"
+
+@import "framework-tabuleiro/src/state/InProgressState.java"
+
+@import "framework-tabuleiro/src/state/NotStartedState.java"
+
+#### View (GameController)
+
+@import "framework-tabuleiro/src/controller/GameController.java"
+
+#### Model  (GameFacade)
+
+@import "framework-tabuleiro/src/facade/GameFacade.java"
 
 
-## Padrão aplicado no cenário
-
-No cenário do jogo Selva, o tabuleiro possui muitas casas (tiles) que podem ter características repetidas, como a cor ou a função (água, armadilha, toca, etc.).
-Utilizando o Flyweight, o sistema cria apenas uma instância para cada tipo de tile e compartilha essa instância entre todas as casas que apresentem o mesmo tipo.
-Dessa forma, o cliente não precisa instanciar repetidamente objetos iguais, reduzindo o consumo de memória e simplificando o gerenciamento dos tiles.
-
-
-  
-## Participantes 
-
-- **Flyweight (TabletopFlyweightProduct):**
-  - Define a interface para os objetos compartilhados, encapsulando o estado intrínseco (por exemplo, o nome ou tipo do tile).
-  - Contém o método operation() que realiza uma operação usando o estado intrínseco, junto com o estado extrínseco (passado como parâmetro, por exemplo, a posição do tile).
-
-- **Concrete Flyweight (TabletopFlyweightConcreteProduct)**
-  - Implementa a interface do Flyweight e define o comportamento concreto do tile compartilhado.
-  
-- **FlyweightFactory (TabletopFlyweightCreator):**
-  - Representa objetos que possuem filhos (outros componentes).
-  - Implementa métodos para adicionar, remover e acessar os filhos.
-  - Implementa a interface TabletopComponent de maneira a delegar operações para os filhos.
-
-
-## Código 
-
-### **TabletopFlyweightConcreteCreator**
-
-```java
-package flyweight;
-// Fábrica concreta que reutiliza instâncias de tiles
-import java.util.HashMap;
-
-public class TabletopFlyweightConcreteCreator extends TabletopFlyweightFactory {
-
-    public TabletopFlyweightConcreteCreator() {
-        flyweights = new HashMap<>();
-    }
-
-    @Override
-    public TabletopFlyweightProduct getFlyweight(String key) {
-        if (!flyweights.containsKey(key)) {
-            flyweights.put(key, new TabletopFlyweightConcreteProduct(key));
-        }
-        return flyweights.get(key);
-    }
-
-    @Override
-    public String[] listFlyweights() {
-        return flyweights.keySet().toArray(new String[0]);
-    }
-}
-```
-### **TabletopFlyweightConcreteProduct**
-```java
-package flyweight;
-// Implementação concreta do objeto compartilhado
-public class TabletopFlyweightConcreteProduct extends TabletopFlyweightProduct {
-
-    public TabletopFlyweightConcreteProduct(String name) {
-        super(name);
-    }
-
-    @Override
-    public String operation(String position) {
-        return "Tile: " + name + " em " + position;
-    }
-}
-
-```
-
-## **TabletopFlyweightFactory**
-```java
-package flyweight;
-// Interface da fábrica de flyweights
-import java.util.Map;
-
-public abstract class TabletopFlyweightFactory {
-    protected Map<String, TabletopFlyweightProduct> flyweights;
-
-    public abstract TabletopFlyweightProduct getFlyweight(String key);
-    public abstract String[] listFlyweights();
-}
-
-```
-
-## **TabletopFlyweightProduct**
-
-```java
-package flyweight;
-// Compartilha objetos similares para economizar memória
-public abstract class TabletopFlyweightProduct {
-    protected String name;
-
-    public TabletopFlyweightProduct(String name) {
-        this.name = name;
-    }
-
-    public abstract String operation(String position);
-}
-```
 
 # Prototype 
 

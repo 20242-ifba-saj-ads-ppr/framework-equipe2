@@ -6,9 +6,7 @@ import strategy.MovimentoStrategy;
 import state.PecaState;
 import state.NormalState;
 
-/**
- * Representa uma peça do jogo Selva, com estado e estratégia de movimento.
- */
+
 public class Peca {
     private String nome;
     private PlayerSide side;
@@ -65,6 +63,7 @@ public class Peca {
     /**
      * Executa o movimento conforme o estado atual (NormalState delega à estratégia).
      */
+    
     public boolean mover(TabletopProduct board,
                          int origemX, int origemY,
                          int destinoX, int destinoY,

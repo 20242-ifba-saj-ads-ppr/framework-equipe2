@@ -1,6 +1,5 @@
 package flyweight;
-// Flyweight Pattern - GOF
-// Implementação concreta do objeto compartilhado
+
 public class TabletopFlyweightConcreteProduct extends TabletopFlyweightProduct {
 
     public TabletopFlyweightConcreteProduct(String name) {

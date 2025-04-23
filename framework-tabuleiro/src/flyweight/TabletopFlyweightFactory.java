@@ -1,6 +1,5 @@
 package flyweight;
-// Flyweight Pattern - GOF
-// Interface da fábrica de flyweights
+
 import java.util.Map;
 
 public abstract class TabletopFlyweightFactory {

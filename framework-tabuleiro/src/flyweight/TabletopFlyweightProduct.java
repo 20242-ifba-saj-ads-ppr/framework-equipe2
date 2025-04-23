@@ -1,6 +1,5 @@
 package flyweight;
-// Flyweight Pattern - GOF
-// Compartilha objetos similares para economizar memória
+
 public abstract class TabletopFlyweightProduct {
     protected String name;
 
