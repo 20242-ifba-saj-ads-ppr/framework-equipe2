@@ -460,6 +460,9 @@ end note
 
 ### Estrutura do padrão (GOF - Papeis)
 
+![image](https://github.com/user-attachments/assets/f6300486-7c37-46c2-86c5-c36f8916b107)
+
+
 ## Padrão aplicado no cenário
 
 Durante a construção do jogo  Selva, é necessário posicionar diversas peças com comportamentos e nomes específicos. Sem a aplicação de Abstract Factory, o código de montagem teria que conhecer diretamente todas as classes concretas de peças, como `Peca`, `NullPiece`, ou qualquer outra personalizada. Isso criaria um forte acoplamento entre o construtor do tabuleiro (como `SelvaTabletopBuilder`) e as peças criadas, dificultando a manutenção e impedindo a variação temática do jogo.
@@ -559,6 +562,9 @@ TigreMovimentoStrategy ..> MovimentoStrategy
 ```
 
 ## Estrutura do Padrão (GOF - Papéis)
+
+![image](https://github.com/user-attachments/assets/5f0cda18-524a-4a39-8a77-b3cc34792675)
+
 
 ## Padrão aplicado no cénario
 
@@ -696,6 +702,8 @@ end note
 ```
 
 ## Estrutura do Padrão (GOF - Papéis)
+
+![image](https://github.com/user-attachments/assets/e1694e1b-e0fe-46ad-995b-030c27e31c7d)
 
 ## Padrão aplicado no cénario
 
@@ -1072,7 +1080,9 @@ O comportamento de peças e do jogo como um todo varia de acordo com seu estado:
 
 Com o State, estados como NormalState, BloqueadaState, InProgressState ou EndedState encapsulam comportamentos específicos e podem ser trocados dinamicamente. A interface (PecaState, GameState) garante que o cliente interaja com qualquer estado de forma uniforme, promovendo extensibilidade e eliminando lógicas condicionais complexas.
 
-## Estrutura
+## Estrutura do Padrão (GOF)
+
+![image](https://github.com/user-attachments/assets/0c0588fc-f1f8-40ce-a556-77d1cf950d62)
 
 ## Participantes
 
@@ -1359,6 +1369,9 @@ MoverPecaCommand --> TabletopSubject : notifica
 ```
 ## Estrutura do Padrão (GOF - Papéis)
 
+![image](https://github.com/user-attachments/assets/756af7df-f365-4d95-bf30-489e71e7fe25)
+
+
 ## Padrão no Cenário
 
 A movimentação de peças no jogo exige que comandos encapsulem ações como “mover peça de A para B”. Essa lógica estaria espalhada em vários lugares do sistema, exigindo que controladores ou interfaces manipulassem diretamente os objetos do jogo, alterando estados sem controle centralizado e dificultando a extensão (ex: histórico de ações ou desfazer).
@@ -1497,7 +1510,10 @@ end note
 
 ```
 
-## Estrutura do GOF
+## Estrutura do Padrão (GOF)
+
+![image](https://github.com/user-attachments/assets/35dac936-1691-45b6-88bb-1dc27f0274a6)
+
 
 ## Padrão aplicado no cénario: 
 
@@ -1748,6 +1764,8 @@ end note
 ```
 
 ## Estrutura do Padrão - GOF
+
+![image](https://github.com/user-attachments/assets/97e6da19-2047-417f-a6e9-1d8df9b43b98)
 
 ## Padrão aplicado no cénario
 Alguns componentes do jogo, como TurnManager e GameController, precisam existir como instâncias únicas em todo o sistema para manter consistência global. Sem o padrão Singleton, seria possível instanciar múltiplos gerenciadores de turno ou controladores, o que poderia levar a estados divergentes, conflitos de responsabilidade e comportamento imprevisível.
