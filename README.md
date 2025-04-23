@@ -124,7 +124,7 @@ Com o uso do padrão Builder, essas etapas foram encapsuladas em implementaçõe
 
 @import "framework-tabuleiro/src/builder/TabletopBuilder.java"
 
-### **TabletopConcreteBuilder**
+### **TabletopConcreteBuilder [SelvaTabletopBuilder] - (Exclusivo do JogoSelva)**
 
 @import "framework-tabuleiro/src/builder/SelvaTabletopBuilder.java"
 
@@ -274,7 +274,7 @@ Durante a construção do tabuleiro, diferentes tipos de células precisam ser c
 @import "framework-tabuleiro/src/factorymethod/TabletopAbstractProduct.java"
 
 
-### **TabletpoConcreteCreator (DenBlackCellCreator, DenWhiteCellCreator,WaterCellCreator,LandCellCreator, TrapWhiteCellCreator, TrapBlackCellCreator, SelvaCellCreator)**
+### **TabletpoConcreteCreator. [DenBlackCellCreator, DenWhiteCellCreator,WaterCellCreator,LandCellCreator, TrapWhiteCellCreator, TrapBlackCellCreator, SelvaCellCreator] - (Código do Framework)**
 
 @import "framework-tabuleiro/src/factorymethod/DenBlackCellCreator.java"
 
@@ -292,7 +292,7 @@ Durante a construção do tabuleiro, diferentes tipos de células precisam ser c
 
 @import "framework-tabuleiro/src/factorymethod/SelvaCellCreator.java"
 
-### **TabletopConcreteProduct (LandCell,DenCell,WaterCell,TrapCell)**
+### **TabletopConcreteProduct [LandCell,DenCell,WaterCell,TrapCell] - (Exclusivo do Jogo Selva)**
 
 @import "framework-tabuleiro/src/factorymethod/DenCell.java"
 
@@ -477,17 +477,27 @@ Com Abstract Factory, extraímos a lógica de criação das peças para uma inte
 
 ## Código
 
-### **AbstractFactory (SelvaPieceFactory)**
+### **AbstractFactory [SelvaPieceFactory] - (Exclusivo do JogoSelva)**
 @import "framework-tabuleiro/src/abstractfactory/SelvaPieceFactory.java"
 
-### **ConcreteFactory(SelvaPieceFactoryImpl)**
+### **ConcreteFactory [SelvaPieceFactoryImpl] - (Exclusivo do JogoSelva)**
 @import "framework-tabuleiro/src/abstractfactory/SelvaPieceFactoryImpl.java"
 
 ### **AbstractProduct(Peca)**
 @import "framework-tabuleiro/src/context/Peca.java"
 
-### **ConcreteProduct(Leao,Tigre etc..)**
+### **ConcreteProduct [Leao,Tigre,Cao,Gato,Leopardo,Lobo,Rato] - (Exclusivo do JogoSelva)**
 @import "framework-tabuleiro/src/abstractfactory/SelvaPieceFactory.java"
+
+@import "framework-tabuleiro/src/abstractfactory/Leao.java"
+
+@import "framework-tabuleiro/src/abstractfactory/Cao.java"
+
+@import "framework-tabuleiro/src/abstractfactory/Gato.java"
+
+@import "framework-tabuleiro/src/abstractfactory/Tigre.java"
+
+@import "framework-tabuleiro/src/abstractfactory/Rato.java"
 
 ### **Client (TabletopBuilder)**
 
@@ -554,7 +564,7 @@ TigreMovimentoStrategy ..> MovimentoStrategy
 
 Cada tipo de peça no jogo possui regras de movimentação específicas. Sem o uso do padrão Strategy, a lógica de movimento de todas as peças estaria centralizada em uma única classe ou método, cheia de condicionais para verificar o tipo da peça, o que tornaria o código rígido, difícil de manter e não extensível. Com o padrão Strategy, cada peça recebe uma instância de MovimentoStrategy correspondente, como LeaoMovimentoStrategy, TigreMovimentoStrategy, MovimentoBasicoStrategy, etc. A lógica de movimento fica encapsulada em classes especializadas, e o cliente pode trocar ou configurar comportamentos dinamicamente, sem modificar o código das peças.
 
-### Participantes
+## Participantes
 
 | Participante       | Classe no Projeto        | Função                                                                 |
 |--------------------|--------------------------|------------------------------------------------------------------------|
@@ -564,13 +574,13 @@ Cada tipo de peça no jogo possui regras de movimentação específicas. Sem o u
 | **Client**          | `TabletopBuilder`        | O Builder que configura as peças do jogo e as associa com suas respectivas estratégias de movimento através da fábrica (`SelvaPieceFactory`). |
 
 
-## Exemplo de Código
+## Código
 
-#### Strategy - (MovimentoStrategy)
+### Strategy - (MovimentoStrategy)
 @import "framework-tabuleiro/src/strategy/MovimentoStrategy.java"
 
 
-#### ConcreteStrategy (LeaoMovimentoStrategy,ElefanteMovimentoStrategy,GatoMovimentoStrategy, LeopardoMovimentoStrategy,LoboMovimentoStrategy,CaoMovimentoStrategy,RatoMovimentoStrategy MovimentoBasicoStrategy, TigreMovimentoStrategy) 
+### ConcreteStrategy (MovimentoBasicoStrategy) - [LeaoMovimentoStrategy,ElefanteMovimentoStrategy,GatoMovimentoStrategy, LeopardoMovimentoStrategy,LoboMovimentoStrategy,CaoMovimentoStrategy,RatoMovimentoStrategy, TigreMovimentoStrategy] (Exclusivo do JogoSelva)
 @import "framework-tabuleiro/src/strategy/LeaoMovimentoStrategy.java"
 @import "framework-tabuleiro/src/strategy/ElefanteMovimentoStrategy.java"
 @import "framework-tabuleiro/src/strategy/GatoMovimentoStrategy.java"
@@ -583,10 +593,10 @@ Cada tipo de peça no jogo possui regras de movimentação específicas. Sem o u
 @import "framework-tabuleiro/src/strategy/MovimentoBasicoStrategy.java"
 
 
-#### Context (Peca)
+### Context (Peca)
 @import "framework-tabuleiro/src/context/Peca.java"
 
-#### Client (TabletopBuilder)
+### Client (TabletopBuilder)
 @import "framework-tabuleiro/src/builder/TabletopBuilder.java"
 
 
@@ -1237,7 +1247,7 @@ A grande vantagem de aplicar o Front Controller é a maior coesão e a flexibili
 | **Model**               | `GameFacade`, `TabletopProduct`, etc.      | Representam os dados do jogo e encapsulam a lógica de negócio.                                  |
 
 ## Código
-#### Front Controller (GameController)
+#### Front Controller [GameController] -(Exclusivo do JogoSelva)
 
 @import "framework-tabuleiro/src/controller/GameController.java"
 
@@ -1257,7 +1267,7 @@ A grande vantagem de aplicar o Front Controller é a maior coesão e a flexibili
 
 @import "framework-tabuleiro/src/controller/GameController.java"
 
-#### Model  (GameFacade)
+#### Model  [GameFacade] - (Exclusivo do JogoSelva)
 
 @import "framework-tabuleiro/src/facade/GameFacade.java"
 
@@ -1864,7 +1874,7 @@ Com o padrão Facade, a classe GameFacade encapsula toda a lógica de inicializa
 
 ## Código
 
-#### Facade - GameFacade
+#### Facade - [GameFacade] - (Exclusivo do JogoSelva)
 @import "framework-tabuleiro/src/facade/GameFacade.java"
 
 #### Subsistemas - TabletopBuilder, TabletopDirector, SelvaPieceFactoryImpl, SelvaCellCreator, TabletopFlyweightConcreteCreator,CommandInvoker
