@@ -1767,7 +1767,7 @@ Com o padrão Singleton, essas classes controlam sua própria instância por mei
 
 ## Intenção
 
-Fornecer uma interface unificada para um conjunto de interfaces em um subsistema. Façade define uma interface de nível mais alto que torna o subsistema mais fácil de ser usado
+Fornecer uma interface unificada para um conjunto de interfaces em um subsistema. Facade define uma interface de nível mais alto que torna o subsistema mais fácil de ser usado
 
 ## Motivação
 
@@ -2086,7 +2086,7 @@ Invoca GameFacade para executar movimentos, desfazer (undo) ou repetir (replay).
 
 ## 6. Notificações de Interface (Observer). Use TabletopConcreteSubject e TabletopConcreteObserver para receber eventos
 
-## 7. Crie uma Façade
+## 7. Crie uma Facade
 Crie XadrezFacade com métodos de alto nível
 
 ```java
