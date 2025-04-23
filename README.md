@@ -1401,6 +1401,8 @@ O padrão Command, ajuda a realizar ações como mover uma peça que são encaps
 
 
 
+
+
 # Prototype 
 
 ## Intenção
