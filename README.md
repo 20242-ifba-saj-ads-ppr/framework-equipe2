@@ -1519,6 +1519,250 @@ Com o padrão Memento, a classe BoardMemento encapsula o estado do TabletopProdu
 #### Client – MoverPecaCommand
 @import "framework-tabuleiro/src/command/MoverPecaCommand.java"
 
+
+# 12. Observer
+
+## Intenção
+
+Definir uma dependência um-para-muitos entre objetos, de maneira que quando um
+objeto muda de estado todos os seus dependentes são notificados e atualizados
+automaticamente
+
+## Motivação
+
+Em um framework de jogo de tabuleiro, diversas partes do sistema podem precisar reagir a alterações no estado do jogo, como atualizações na pontuação, mudança de turno ou alterações no estado do tabuleiro. Sem o Observer Pattern, cada componente precisaria interrogar constantemente o estado do jogo ou ser explicitamente atualizado por métodos diretos, aumentando o acoplamento e a complexidade do código.
+```plantuml
+@startuml
+title UML - Sem Observer Pattern
+
+class GameController {
+  - state: String
+  - display: Display
+  - scoreBoard: ScoreBoard
+  + setState(newState: String): void
+}
+
+class Display {
+  + update(data: String): void
+}
+
+class ScoreBoard {
+  + update(data: String): void
+}
+
+GameController --> Display : "chama update()"
+GameController --> ScoreBoard : "chama update()"
+@enduml
+```
+
+Com o Observer Pattern, o sujeito central (por exemplo, um controlador de estado do jogo) notifica automaticamente todos os observadores registrados assim que seu estado muda, garantindo que a interface do usuário, o sistema de pontuação e outros módulos recebam as atualizações em tempo real e de forma desacoplada.
+
+```plantuml
+@startuml
+title Observer Pattern para Jogo de Tabuleiro
+
+interface TabletopObserver {
+  + update(data: String): void
+}
+
+abstract class TabletopSubject {
+  + attach(observer: TabletopObserver): void
+  + detach(observer: TabletopObserver): void
+  + notifyObservers(data: String): void
+}
+
+class TabletopConcreteSubject {
+  - observers: List<TabletopObserver>
+  - state: String
+  + TabletopConcreteSubject(initialState: String)
+  + setState(newState: String): void
+  + attach(observer: TabletopObserver): void
+  + detach(observer: TabletopObserver): void
+  + notifyObservers(data: String): void
+}
+
+class TabletopConcreteObserver {
+  - name: String
+  + TabletopConcreteObserver(name: String)
+  + update(data: String): void
+}
+
+TabletopConcreteSubject ..|> TabletopSubject
+TabletopConcreteObserver ..|> TabletopObserver
+
+TabletopConcreteSubject --> TabletopObserver : "notifica"
+@enduml
+```
+
+## Estrutura do Padrão (GOF - Papéis)
+
+![image](https://github.com/user-attachments/assets/32ca70b1-8c08-4f52-90c5-7cf49e6f9f1a)
+
+
+## Participantes
+
+- **Observer (TabletopObserver):**
+  - Define a interface para os observadores que desejam receber atualizações.
+  - Declara o método `update(String data)`, que será chamado pelo sujeito quando ocorrer uma mudança de estado.
+
+- **Subject (TabletopSubject):**
+  - Define a interface ou classe abstrata para o sujeito observado.
+  - Declara os métodos `attach(TabletopObserver observer)`, `detach(TabletopObserver observer)` e `notifyObservers(String data)`, responsáveis por gerenciar os observadores e disseminar atualizações.
+
+- **ConcreteSubject (TabletopConcreteSubject):**
+  - Implementa a classe abstrata `TabletopSubject` e mantém o estado interno do objeto.
+  - Quando seu estado é alterado (por meio do método `setState(String newState)`), ele notifica todos os observadores registrados.
+
+- **ConcreteObserver (TabletopConcreteObserver):**
+  - Implementa a interface `TabletopObserver`.
+  - Define o comportamento do observador quando uma atualização é recebida, por exemplo, exibindo a mensagem de atualização no console.
+  
+## Código
+
+### **TabletopConcreteObserver**
+@import "framework-tabuleiro/src/observer/TabletopConcreteObserver.java"
+
+
+
+### **TabletopConcreteSubject**
+@import "framework-tabuleiro/src/observer/TabletopConcreteSubject.java"
+
+### **TabletopObserver**
+
+@import "framework-tabuleiro/src/observer/TabletopObserver.java"
+### **TabletopSubject**
+
+@import "framework-tabuleiro/src/observer/TabletopSubject.java"
+
+# 13. Singleton
+
+## Intenção
+
+Garantir que uma classe tenha somente uma instância e fornecer um ponto global de acesso para a mesma
+
+## Motivação
+
+Imagine um cenário onde diversas partes do framework de um jogo de tabuleiro precisam acessar o lado do jogador atual para decidir se um movimento é válido, alternar turnos, ou atualizar mensagens no console. Suponha que você tenha um método getCurrentSide() que retorna se é a vez do jogador branco ou do jogador preto.
+
+Agora pense que, sem nenhum controle central, cada componente — como GameController, GameFacade, Peca, ou Command — cria sua própria instância de TurnManager.
+
+Nesse cenário, temos múltiplas instâncias de TurnManager, e cada uma armazena um valor diferente de turno. O GameController pode acreditar que é a vez do branco, enquanto a GameFacade acredita que é a do preto, causando comportamentos errados, como:
+
+- Jogadores realizando dois turnos seguidos;
+
+- Validações incorretas de jogada ("não é sua vez");
+
+- Dificuldade para fazer undo/replay corretamente com base no jogador.
+
+- Além disso, essa abordagem viola princípios como coesão e baixo acoplamento, pois o estado do jogo se dispersa entre objetos soltos.
+
+```plantuml
+@startuml
+title Sem Singleton - Problema com TurnManager duplicado
+
+class TurnManager {
+    - currentPlayer: PlayerSide
+    + getCurrentSide(): PlayerSide
+    + switchTurn(): void
+}
+
+class GameController {
+    - turnManager: TurnManager
+}
+
+class GameFacade {
+    - turnManager: TurnManager
+}
+
+class Peca {
+    - turnManager: TurnManager
+}
+
+GameController --> TurnManager : instancia própria
+GameFacade --> TurnManager : instancia própria
+Peca --> TurnManager : instancia própria
+
+note right of TurnManager
+Sem Singleton, cada classe cria sua
+própria instância de TurnManager,
+gerando estados inconsistentes.
+end note
+@enduml
+```
+
+
+Aplicando o padrão Singleton à classe TurnManager, garantimos que existe apenas uma única instância acessível globalmente. Com isso:
+
+- Toda parte do sistema acessa a mesma instância com TurnManager.getInstance();
+
+- O lado atual do jogador (PlayerSide) é sempre consistente;
+
+- A troca de turnos com switchTurn() afeta imediatamente todas as áreas do jogo;
+
+- Reduzimos a complexidade e melhoramos a manutenibilidade do sistema.
+
+```plantuml
+@startuml
+title Com Singleton - TurnManager centralizado
+
+class TurnManager {
+    - static instance: TurnManager
+    - currentPlayer: PlayerSide
+    + getInstance(): TurnManager
+    + getCurrentSide(): PlayerSide
+    + switchTurn(): void
+}
+
+class GameController {
+    - turnManager: TurnManager
+}
+
+class GameFacade {
+    - turnManager: TurnManager
+}
+
+class Peca {
+    - turnManager: TurnManager
+}
+
+GameController --> TurnManager : getInstance()
+GameFacade --> TurnManager : getInstance()
+Peca --> TurnManager : getInstance()
+
+note right of TurnManager
+Com Singleton, todos acessam
+a mesma instância, garantindo
+sincronia no turno atual.
+end note
+@enduml
+```
+
+## Estrutura do Padrão - GOF
+
+## Padrão aplicado no cénario
+Alguns componentes do jogo, como TurnManager e GameController, precisam existir como instâncias únicas em todo o sistema para manter consistência global. Sem o padrão Singleton, seria possível instanciar múltiplos gerenciadores de turno ou controladores, o que poderia levar a estados divergentes, conflitos de responsabilidade e comportamento imprevisível.
+
+Com o padrão Singleton, essas classes controlam sua própria instância por meio de um método getInstance() e um construtor privado. Isso garante que apenas uma instância seja criada e compartilhada, centralizando o controle de estado e comportamento. O acesso global simplifica o uso e preserva a integridade do jogo.
+
+
+
+## Participantes
+
+| Participante       | Classe no Projeto      | Função                                                                                             |
+|--------------------|------------------------|----------------------------------------------------------------------------------------------------|
+| **Singleton**      | `TurnManager`          | Garante que apenas uma instância do gerenciador de turnos exista no sistema.                      |
+| **Client**         | `GameController`, `GameFacade`, `Peca` | Utilizam `TurnManager.getInstance()` para acessar o turno atual e alternar jogadores de forma centralizada. |
+
+
+## Código
+#### Singleton (TurnManager)
+@import "framework-tabuleiro/src/singleton/TurnManager.java"
+
+#### Client (GameController, GameFacade, Peca)
+@import "framework-tabuleiro/src/controller/GameController.java"
+@import "framework-tabuleiro/src/facade/GameFacade.java"
+@import "framework-tabuleiro/src/context/Peca.java"
+
 # Prototype 
 
 ## Intenção
@@ -1631,208 +1875,8 @@ public class TabletopConcretePrototype implements TabletopPrototype {
 }
 ```
 
-# Observer
-
-## Intenção
-
-Definir uma dependência um-para-muitos entre objetos, de maneira que quando um
-objeto muda de estado todos os seus dependentes são notificados e atualizados
-automaticamente
-
-## Motivação
-
-Em um framework de jogo de tabuleiro, diversas partes do sistema podem precisar reagir a alterações no estado do jogo, como atualizações na pontuação, mudança de turno ou alterações no estado do tabuleiro. Sem o Observer Pattern, cada componente precisaria interrogar constantemente o estado do jogo ou ser explicitamente atualizado por métodos diretos, aumentando o acoplamento e a complexidade do código.
-```plantuml
-@startuml
-title UML - Sem Observer Pattern
-
-class GameController {
-  - state: String
-  - display: Display
-  - scoreBoard: ScoreBoard
-  + setState(newState: String): void
-}
-
-class Display {
-  + update(data: String): void
-}
-
-class ScoreBoard {
-  + update(data: String): void
-}
-
-GameController --> Display : "chama update()"
-GameController --> ScoreBoard : "chama update()"
-@enduml
-```
-
-Com o Observer Pattern, o sujeito central (por exemplo, um controlador de estado do jogo) notifica automaticamente todos os observadores registrados assim que seu estado muda, garantindo que a interface do usuário, o sistema de pontuação e outros módulos recebam as atualizações em tempo real e de forma desacoplada.
-
-```plantuml
-@startuml
-title Observer Pattern para Jogo de Tabuleiro
-
-interface TabletopObserver {
-  + update(data: String): void
-}
-
-abstract class TabletopSubject {
-  + attach(observer: TabletopObserver): void
-  + detach(observer: TabletopObserver): void
-  + notifyObservers(data: String): void
-}
-
-class TabletopConcreteSubject {
-  - observers: List<TabletopObserver>
-  - state: String
-  + TabletopConcreteSubject(initialState: String)
-  + setState(newState: String): void
-  + attach(observer: TabletopObserver): void
-  + detach(observer: TabletopObserver): void
-  + notifyObservers(data: String): void
-}
-
-class TabletopConcreteObserver {
-  - name: String
-  + TabletopConcreteObserver(name: String)
-  + update(data: String): void
-}
-
-TabletopConcreteSubject ..|> TabletopSubject
-TabletopConcreteObserver ..|> TabletopObserver
-
-TabletopConcreteSubject --> TabletopObserver : "notifica"
-@enduml
-```
-
-## Estrutura do Padrão (GOF - Papéis)
-
-![image](https://github.com/user-attachments/assets/32ca70b1-8c08-4f52-90c5-7cf49e6f9f1a)
-
-
-## Participantes
-
-- **Observer (TabletopObserver):**
-  - Define a interface para os observadores que desejam receber atualizações.
-  - Declara o método `update(String data)`, que será chamado pelo sujeito quando ocorrer uma mudança de estado.
-
-- **Subject (TabletopSubject):**
-  - Define a interface ou classe abstrata para o sujeito observado.
-  - Declara os métodos `attach(TabletopObserver observer)`, `detach(TabletopObserver observer)` e `notifyObservers(String data)`, responsáveis por gerenciar os observadores e disseminar atualizações.
-
-- **ConcreteSubject (TabletopConcreteSubject):**
-  - Implementa a classe abstrata `TabletopSubject` e mantém o estado interno do objeto.
-  - Quando seu estado é alterado (por meio do método `setState(String newState)`), ele notifica todos os observadores registrados.
-
-- **ConcreteObserver (TabletopConcreteObserver):**
-  - Implementa a interface `TabletopObserver`.
-  - Define o comportamento do observador quando uma atualização é recebida, por exemplo, exibindo a mensagem de atualização no console.
-  
-## Código
-
-### **TabletopConcreteObserver**
-
-```java
-package observer;
-// Observador concreto
-public class TabletopConcreteObserver implements TabletopObserver {
-    private String name;
-
-    public TabletopConcreteObserver(String name) {
-        this.name = name;
-    }
-
-    @Override
-    public void update(String data) {
-        System.out.println(name + " recebeu atualização: " + data);
-    }
-}
-```
-
-### **TabletopConcreteSubject**
-```java
-package observer;
-// Sujeito concreto que mantém estado
-import java.util.ArrayList;
-import java.util.List;
-
-public class TabletopConcreteSubject extends TabletopSubject {
-    private List<TabletopObserver> observers = new ArrayList<>();
-    private String state;
-
-    public TabletopConcreteSubject(String initialState) {
-        this.state = initialState;
-    }
-
-    public void setState(String newState) {
-        this.state = newState;
-        notifyObservers(this.state);
-    }
-
-    @Override
-    public void attach(TabletopObserver observer) {
-        observers.add(observer);
-    }
-
-    @Override
-    public void detach(TabletopObserver observer) {
-        observers.remove(observer);
-    }
-
-    @Override
-    public void notifyObservers(String data) {
-        for (TabletopObserver observer : observers) {
-            observer.update(data);
-        }
-    }
-}
-
-```
-
-### **TabletopObserver**
-```java
-package observer;
-// Interface para observadores
-public interface TabletopObserver {
-    void update(String data);
-}
-```
-
-### **TabletopSubject**
-```java
-package observer;
-// Interface do sujeito observado
-public abstract class TabletopSubject {
-    public abstract void attach(TabletopObserver observer);
-    public abstract void detach(TabletopObserver observer);
-    public abstract void notifyObservers(String data);
-}
-```
 
 
 
 
 
-
-## Considerações Finais
-- Aplicar o padrão Command ao framework do jogo de tabuleiro oferece os seguintes benefícios:
-
-- Desacoplamento: O cliente (interface ou lógica de controle) invoca comandos sem conhecer os detalhes da execução.
-
-- Histórico de Ações: Cada comando é registrado, permitindo a implementação de replays ou de sistemas de undo/redo.
-
-- Flexibilidade: É simples adicionar novos comandos ou combinar comandos existentes (através de um MacroCommand), facilitando a evolução do sistema.
-
-- Registro e Persistência: Com a serialização e armazenamento no log, o sistema pode restaurar jogadas, facilitando a análise e correção de erros após uma queda de sistema.
-
-
-
-## Considerações Finais
-- **Desacoplamento do Algoritmo:**
-  - A lógica de movimentação é separada da classe Peca, permitindo que estratégias diferentes sejam aplicadas sem modificar o contexto.
-
-- **Flexibilidade e Extensibilidade:**
-  - Novos comportamentos de movimento podem ser adicionados como novas implementações de MovimentoStrategy sem a necessidade de alterar a classe Peca ou outras partes do sistema.
-
-- **Reutilização:**
-O mesmo algoritmo de movimentação pode ser utilizado por diversas peças, promovendo a reutilização e facilitando a manutenção.

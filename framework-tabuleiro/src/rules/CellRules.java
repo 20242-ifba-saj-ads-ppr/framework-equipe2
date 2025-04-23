@@ -6,10 +6,6 @@ import context.Peca;
 import context.PlayerSide;
 import enums.CellType;
 
-/**
- * Regras fixas de interação entre peças e células do tabuleiro.
- * Centraliza validações como entrada em tocas, armadilhas, água, etc.
- */
 public class CellRules {
 
     /**
