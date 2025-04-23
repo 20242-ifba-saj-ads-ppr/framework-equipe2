@@ -2001,7 +2001,122 @@ public class TabletopConcretePrototype implements TabletopPrototype {
 ```
 
 
+# Como Usar o Framework para Construir outros Jogos – Exemplo: Jogo de Xadrez
 
+Este framework foi projetado com base em padrões de projeto para permitir a criação modular e reutilizável de jogos de tabuleiro. A seguir, apresentamos um guia passo a passo para integrar um novo jogo—neste caso, **Xadrez**—ao framework.
 
+---
 
+## 1. Implementar o Builder do Tabuleiro
 
+1. **Criar** a classe `XadrezTabletopBuilder` que estenda `TabletopBuilder` e implemente:
+   - `withDimensions(int width, int height)`: define 8×8.
+   - `buildCells(CellCreator cellFactory, TabletopFlyweightFactory flyFactory)`: preenche a matriz de células.
+   - `buildTiles(TabletopFlyweightFactory flyFactory)`: cria o tabuleiro visual (casas brancas e pretas alternadas).
+   - `buildPieces(SelvaPieceFactory pieceFactory)`: posiciona as peças nas casas iniciais.
+
+2. **Exemplo de esqueleto**:
+   ```java
+   public class XadrezTabletopBuilder extends TabletopBuilder {
+       @Override
+       public TabletopBuilder buildCells(CellCreator cellFactory, TabletopFlyweightFactory flyFactory) {
+           // inicializa cells[y][x] usando cellFactory.createCell(...)
+           return this;
+       }
+
+       @Override
+       public TabletopBuilder buildTiles(TabletopFlyweightFactory flyFactory) {
+           // percorre cells[][], chama render() e adiciona TabletopLeaf
+           return this;
+       }
+
+       @Override
+       public TabletopBuilder buildPieces(SelvaPieceFactory pieceFactory) {
+           // usa pieceFactory para criar peças de xadrez nas posições iniciais
+           return this;
+       }
+   }
+   ```
+
+3. **Montagem**:
+
+```java
+TabletopDirector director = new TabletopDirector(new XadrezTabletopBuilder());
+TabletopProduct tabuleiroXadrez = director
+    .withDimensions(8, 8)
+    .buildCells(new XadrezCellCreator(), flyFactory)
+    .buildTiles(flyFactory)
+    .buildPieces(new XadrezPieceFactoryImpl())
+    .getResult();
+
+```
+## 2. Criar a Abstract Factory das Peças
+
+1. Definir XadrezPieceFactory (interface) com métodos
+2. Implementar XadrezPieceFactoryImpl que, em cada método, invoque um método protegido createPiece(name, side, strategy, startPos) para instanciar e posicionar cada peça.
+
+## 3. Implementar as Estratégias de Movimento (Strategy)
+
+```java
+public class CavaloMovimentoStrategy implements MovimentoStrategy {
+    @Override
+    public boolean mover(Peca peca,
+                         TabletopProduct board,
+                         int ox, int oy,
+                         int dx, int dy,
+                         TabletopSubject subj) {
+        // valida padrão “L” e invoca board.movePiece(...)
+    }
+}
+```
+
+- Rei: movimentos de 1 casa em todas as direções.
+- Rainha: combina movimentos de torre e bispo.
+- Bispo, Torre, Peão, etc.
+
+## 4. Validar Regras de Movimento (Chain of Responsibility)
+
+Encadeie validadores para isolar cada regra:
+
+```java
+MoveValidator chain =
+    new BoundsValidator(
+      new EmptyOrEnemyValidator(
+        new CheckStateValidator(null)));
+if (!chain.validate(peca, board, ox, oy, dx, dy)) return false;
+
+```
+
+- BoundsValidator: verifica limites do tabuleiro.
+- EmptyOrEnemyValidator: só permite casas vazias ou inimigas.
+- CheckStateValidator: impede movimento que colocaria o rei em xeque.
+
+## 5. Controlador de Jogo (Front Controller + State)
+Implemente XadrezController (ou use GameController) que:
+
+Recebe comandos do console:
+
+- start
+- move ox oy dx dy
+- undo
+- replay
+- end
+
+Gerencia o estado com o State Pattern (NotStartedState, InProgressState, EndedState).
+Controla turnos via TurnManager (Singleton).
+Invoca GameFacade para executar movimentos, desfazer (undo) ou repetir (replay).
+
+## 6. Notificações de Interface (Observer). Use TabletopConcreteSubject e TabletopConcreteObserver para receber eventos
+
+## 7. Crie uma Façade
+Crie XadrezFacade com métodos de alto nível
+
+```java
+public class XadrezFacade {
+    void iniciarPartida();
+    boolean realizarJogada(int ox, int oy, int dx, int dy);
+    void desfazer();
+    void reexecutar();
+    TabletopProduct obterEstado();
+}
+```
