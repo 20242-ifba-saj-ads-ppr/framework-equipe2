@@ -11,14 +11,8 @@ import context.PlayerSide;
 import enums.CellType;
 import context.Peca;
 
-import java.io.IOException;
 import java.util.Scanner;
 
-/**
- * GameController atua como Front Controller: lê comandos do console e delega
- * às operações apropriadas (start, move, undo, replay, end).
- * Usa State Pattern para o ciclo de vida do jogo.
- */
 public class GameController {
     private final GameFacade facade;
     private final TurnManager turnManager;
@@ -32,9 +26,6 @@ public class GameController {
         this.gameOver = false;
     }
 
-    /**
-     * Ponto de entrada: executa o loop de leitura de comandos.
-     */
     public void run() {
         Scanner in = new Scanner(System.in);
         System.out.println("Digite 'start' para iniciar, 'move ox oy dx dy' para jogar, 'undo', 'replay', 'end' para sair.");
@@ -46,9 +37,6 @@ public class GameController {
         in.close();
     }
 
-    /**
-     * Analisa o comando e invoca o estado ou facade apropriado.
-     */
     private void dispatch(String commandLine) {
         if (commandLine.equalsIgnoreCase("start")) {
             state.start(this);
@@ -93,7 +81,6 @@ public class GameController {
         }
     }
 
-    /** Métodos chamados pelos estados */
     public void doStart() {
         facade.setupSelva(
             7, 9,
@@ -104,7 +91,6 @@ public class GameController {
         facade.divideBoard();
         System.out.println("=== Jogo Selva iniciado! ===");
         printBoard();
-        // entra no estado de jogo iniciado
     }
 
     public void doPlayLoop() {
@@ -120,7 +106,6 @@ public class GameController {
         this.state = s;
     }
 
-    /** Checa vitória ao entrar em uma toca adversária */
     private void checkVictory(int dx, int dy) {
         CellType dest = facade.getBoard().getCellType(dx, dy);
         PlayerSide current = turnManager.getCurrentSide();
@@ -131,7 +116,6 @@ public class GameController {
         }
     }
 
-    /** Exibe o tabuleiro no console */
     private void printBoard() {
         var board = facade.getBoard();
         for (int y = 0; y < board.getHeight(); y++) {
@@ -150,7 +134,6 @@ public class GameController {
         }
     }
 
-    /** Recupera o nome da peça na posição de origem */
     private String promptForPieceName(int ox, int oy) {
         Peca p = facade.getBoard().getPieceAt(ox, oy);
         return p != null ? p.getNome() : "";
